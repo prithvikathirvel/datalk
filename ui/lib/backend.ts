@@ -7,8 +7,7 @@ export function joinUrl(baseUrl: string, path: string) {
 }
 
 export async function getBearerTokenOrResponse() {
-  //  const token = await getAuthToken();
-  const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkYXRhbGsiLCJpYXQiOjE3NzQ3ODk1NjUsImV4cCI6MTgwNjMyNTU2NSwiYXVkIjoiZGF0YWxrLWFwaSIsInN1YiI6ImRkMzdmMWMwLTljYzAtNDYxMi1iMTUwLTAzYjE4OWRlNWVhOSIsIm5hbWUiOiJQcml0aHZpIFBLIiwiZW1haWwiOiJwcml0aHZpb2ZmaWNpYWwwMkBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4ifQ.1NzKr7lQ5BdtHBQzyv3QZAVXuycD6zivELEJ0XBbH1w";
+  const token = await getAuthToken();
   if (!token) {
     return {
       token: null,
@@ -42,14 +41,17 @@ export async function proxyJson<T>(
   init: RequestInit,
   fallbackStatus = 502,
 ) {
+  console.log(`[backend] fetch → ${init.method ?? "GET"} ${url}`);
   try {
     const response = await fetch(url, init);
+    console.log(`[backend] response ← ${response.status} ${url}`);    
     const contentType = response.headers.get("content-type") ?? "";
     const data = contentType.includes("application/json")
       ? ((await response.json()) as T)
       : ((await response.text()) as T);
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
+    console.error(`[backend] error fetching ${url}:`, error);
     return NextResponse.json(
       {
         detail:
@@ -66,3 +68,6 @@ export const backendUrls = {
   ingestion: appConfig.ingestionApiBaseUrl,
   chat: appConfig.chatApiBaseUrl,
 };
+
+console.log("[backend] ingestion base URL:", backendUrls.ingestion);
+console.log("[backend] chat base URL:", backendUrls.chat);
