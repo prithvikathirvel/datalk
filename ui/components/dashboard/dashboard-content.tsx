@@ -281,7 +281,7 @@ export function DashboardContent() {
     void load();
   }, []);
 
-  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  const totalSize = files.reduce((sum, f) => sum + (f.size ?? 0), 0);
   const liveEmbeds = embeds.filter((e) => e.isActive).length;
   const analytics = analyticsData ?? mockAnalyticsData;
 
