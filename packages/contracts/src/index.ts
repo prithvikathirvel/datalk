@@ -67,6 +67,8 @@ export interface DocumentFile {
   last_modified: string;
   size: number | null;
   type?: string;
+  status?: string;
+  job_id?: string;
 }
 
 export interface SearchResultMetadata {
