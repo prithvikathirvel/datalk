@@ -50,6 +50,7 @@ export async function setAuthCookie(user: {
 export async function clearAuthCookie() {
   const cookieStore = await cookies();
   cookieStore.delete(authCookieName);
+  cookieStore.delete("rag_saas_id_token");
 }
 
 export async function getAuthToken() {
@@ -68,17 +69,29 @@ export async function getSessionUser() {
     return { id: payload.sub, email: payload.email, name: payload.name };
   }
 
-  // Cognito RS256 JWT (Google / federated login) — decode without re-signing
-  const payload = decodeJwtPayload(token);
+  // Cognito flow — access token is for API auth, ID token holds profile claims
+  const cookieStore = await cookies();
+  const idTokenRaw = cookieStore.get("rag_saas_id_token")?.value ?? null;
+  const sourceToken = idTokenRaw ?? token;
+
+  const payload = decodeJwtPayload(sourceToken);
   if (!payload) return null;
 
   // Check expiry
   const exp = typeof payload.exp === "number" ? payload.exp : 0;
   if (exp < Math.floor(Date.now() / 1000)) return null;
 
+  const email = (payload.email as string | undefined) ?? "";
+  const name =
+    (payload.name as string | undefined) ??
+    (payload.given_name as string | undefined) ??
+    (payload["cognito:username"] as string | undefined) ??
+    email.split("@")[0] ??
+    "";
+
   return {
     id: (payload.sub as string) ?? "",
-    email: (payload.email as string) ?? "",
-    name: ((payload.name ?? payload.username ?? payload.email) as string) ?? "",
+    email,
+    name,
   };
 }
