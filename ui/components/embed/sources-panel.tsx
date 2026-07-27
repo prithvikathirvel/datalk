@@ -3,7 +3,7 @@
 import type { DocumentFile } from "@template/contracts";
 import { Button, cn } from "@template/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { EmbedApiError, fetchSources, saveSources } from "@/lib/embed-client";
+import { fetchSources, saveSources } from "@/lib/embed-client";
 import { formatDateTime } from "@/lib/format";
 
 function documentType(file: DocumentFile) {
@@ -26,7 +26,6 @@ export function SourcesPanel({
   const [initial, setInitial] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [pending, setPending] = useState(false);
   const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
@@ -49,15 +48,10 @@ export function SourcesPanel({
       const ids = new Set(sources.map((source) => source.documentId));
       setSelected(ids);
       setInitial(ids);
-      setPending(false);
     } catch (caught) {
-      if (caught instanceof EmbedApiError && caught.pending) {
-        setPending(true);
-      } else {
-        onError(
-          caught instanceof Error ? caught.message : "Unable to load sources.",
-        );
-      }
+      onError(
+        caught instanceof Error ? caught.message : "Unable to load sources.",
+      );
     } finally {
       setLoading(false);
     }
@@ -127,34 +121,6 @@ export function SourcesPanel({
         </p>
         <p className="mt-1 text-slate-400 text-xs">
           Once created, you can choose which documents this chatbot can search.
-        </p>
-      </div>
-    );
-  }
-
-  if (pending) {
-    return (
-      <div className="rounded-xl border border-slate-200 border-dashed px-5 py-10 text-center">
-        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-5 w-5 text-slate-400"
-            aria-hidden="true"
-          >
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-        </div>
-        <p className="font-medium text-slate-700 text-sm">
-          Source scoping is not available yet
-        </p>
-        <p className="mx-auto mt-1 max-w-sm text-slate-400 text-xs leading-relaxed">
-          This chatbot currently searches your entire document library. Once
-          source scoping is live you can restrict it to specific documents.
         </p>
       </div>
     );

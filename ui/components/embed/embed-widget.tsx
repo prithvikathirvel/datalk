@@ -10,7 +10,10 @@ interface WidgetMessage {
   content: string;
 }
 
-function makeMessage(role: WidgetMessage["role"], content: string): WidgetMessage {
+function makeMessage(
+  role: WidgetMessage["role"],
+  content: string,
+): WidgetMessage {
   return {
     id: `${role}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     role,
@@ -19,16 +22,20 @@ function makeMessage(role: WidgetMessage["role"], content: string): WidgetMessag
 }
 
 async function readError(response: Response) {
-  const data = (await response.json().catch(() => null)) as { detail?: string } | null;
+  const data = (await response.json().catch(() => null)) as {
+    detail?: string;
+  } | null;
   return data?.detail ?? "Something went wrong.";
 }
 
 export function EmbedWidget({
   config,
+  apiKey,
   parentOrigin,
   pageUrl,
 }: {
   config: EmbedConfig;
+  apiKey: string;
   parentOrigin?: string;
   pageUrl?: string;
 }) {
@@ -44,7 +51,9 @@ export function EmbedWidget({
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const storedThreadId = window.localStorage.getItem(`rag-widget-thread-${config.id}`);
+    const storedThreadId = window.localStorage.getItem(
+      `datalk-widget-thread-${config.id}`,
+    );
     if (storedThreadId) setThreadId(storedThreadId);
   }, [config.id]);
 
@@ -62,28 +71,40 @@ export function EmbedWidget({
     setLoading(true);
     setMessages((current) => [...current, makeMessage("user", message)]);
 
-    const response = await fetch(`/api/embed/${config.id}/chat`, {
+    const response = await fetch("/api/embed/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Api-Key": apiKey,
+      },
       body: JSON.stringify({
         message,
         thread_id: threadId ?? undefined,
-        parentOrigin,
-        pageUrl,
+        visitor_email: email || undefined,
+        page_url: pageUrl,
       }),
     });
 
     setLoading(false);
     if (!response.ok) {
       setError(await readError(response));
-      setMessages((current) => [...current, makeMessage("assistant", config.fallbackMessage)]);
+      setMessages((current) => [
+        ...current,
+        makeMessage("assistant", config.fallbackMessage),
+      ]);
       return;
     }
 
     const data = (await response.json()) as ChatResponse;
     setThreadId(data.thread_id);
-    window.localStorage.setItem(`rag-widget-thread-${config.id}`, data.thread_id);
-    setMessages((current) => [...current, makeMessage("assistant", data.final_response)]);
+    window.localStorage.setItem(
+      `datalk-widget-thread-${config.id}`,
+      data.thread_id,
+    );
+    setMessages((current) => [
+      ...current,
+      makeMessage("assistant", data.final_response),
+    ]);
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -93,12 +114,17 @@ export function EmbedWidget({
 
   async function submitFeedback(reason: "not_helpful" | "needs_human") {
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
-    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+    const lastAssistant = [...messages]
+      .reverse()
+      .find((m) => m.role === "assistant");
     if (!lastUser) return;
 
-    const response = await fetch(`/api/embed/${config.id}/feedback`, {
+    const response = await fetch("/api/embed/feedback", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Api-Key": apiKey,
+      },
       body: JSON.stringify({
         threadId,
         question: lastUser.content,
@@ -111,12 +137,14 @@ export function EmbedWidget({
     });
 
     setFeedbackStatus(
-      response.ok ? "Thanks — this was added to the knowledge gap inbox." : await readError(response),
+      response.ok
+        ? "Thanks — this was added to the knowledge gap inbox."
+        : await readError(response),
     );
   }
 
   function closeWidget() {
-    window.parent?.postMessage({ type: "rag-saas-close" }, "*");
+    window.parent?.postMessage({ type: "datalk-close" }, "*");
   }
 
   return (
@@ -131,8 +159,12 @@ export function EmbedWidget({
             {config.avatarInitials}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-950">{config.botName}</p>
-            <p className="text-xs text-slate-400">Online · answers from documents</p>
+            <p className="truncate text-sm font-semibold text-slate-950">
+              {config.botName}
+            </p>
+            <p className="text-xs text-slate-400">
+              {config.botDescription || "Online · answers from documents"}
+            </p>
           </div>
         </div>
         <button
@@ -160,7 +192,9 @@ export function EmbedWidget({
                     : "rounded-tl-sm border border-slate-100 bg-slate-50 text-slate-700"
                 }`}
                 style={
-                  message.role === "user" ? { backgroundColor: config.primaryColor } : undefined
+                  message.role === "user"
+                    ? { backgroundColor: config.primaryColor }
+                    : undefined
                 }
               >
                 {message.content}
@@ -196,7 +230,9 @@ export function EmbedWidget({
         ) : null}
 
         {error ? <p className="mb-2 text-xs text-red-600">{error}</p> : null}
-        {feedbackStatus ? <p className="mb-2 text-xs text-emerald-600">{feedbackStatus}</p> : null}
+        {feedbackStatus ? (
+          <p className="mb-2 text-xs text-emerald-600">{feedbackStatus}</p>
+        ) : null}
 
         {config.collectVisitorEmail ? (
           <Input
@@ -232,12 +268,24 @@ export function EmbedWidget({
         </form>
 
         <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-          <span className="text-slate-400">Powered by Datalk</span>
+          {config.showPoweredBy === false ? (
+            <span />
+          ) : (
+            <span className="text-slate-400">Powered by Datalk</span>
+          )}
           <div className="flex gap-2">
-            <button type="button" onClick={() => void submitFeedback("not_helpful")} className="text-slate-500 hover:text-slate-950">
+            <button
+              type="button"
+              onClick={() => void submitFeedback("not_helpful")}
+              className="text-slate-500 hover:text-slate-950"
+            >
               Not helpful
             </button>
-            <button type="button" onClick={() => void submitFeedback("needs_human")} className="text-slate-500 hover:text-slate-950">
+            <button
+              type="button"
+              onClick={() => void submitFeedback("needs_human")}
+              className="text-slate-500 hover:text-slate-950"
+            >
               Human help
             </button>
           </div>

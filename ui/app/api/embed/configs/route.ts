@@ -1,43 +1,106 @@
 import { NextResponse } from "next/server";
-import type { EmbedConfigInput } from "@/lib/embed-store";
-import { listEmbedConfigs, upsertEmbedConfig } from "@/lib/embed-store";
-import { getSessionUser } from "@/lib/session";
+import {
+  embedUrl,
+  getBearerTokenOrResponse,
+  readBackendError,
+} from "@/lib/backend";
+import {
+  type BackendApiKeyCreated,
+  type BackendEmbedConfig,
+  type EmbedConfigFormInput,
+  toApiKey,
+  toBackendConfigPayload,
+  toEmbedConfig,
+} from "@/lib/embed-mappers";
 
 export async function GET() {
-  const user = await getSessionUser();
-  if (!user) {
-    return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
-  }
+  const { token, response } = await getBearerTokenOrResponse();
+  if (response) return response;
 
-  const configs = await listEmbedConfigs(user.id);
-  return NextResponse.json({ configs });
+  try {
+    const backendResponse = await fetch(embedUrl("/configs"), {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (!backendResponse.ok) {
+      return NextResponse.json(
+        { detail: await readBackendError(backendResponse) },
+        { status: backendResponse.status },
+      );
+    }
+
+    const data = (await backendResponse.json()) as BackendEmbedConfig[];
+    return NextResponse.json({ configs: data.map(toEmbedConfig) });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        detail:
+          error instanceof Error
+            ? error.message
+            : "Unable to reach the embed service.",
+      },
+      { status: 502 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
-  const user = await getSessionUser();
-  if (!user) {
-    return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
+  const { token, response } = await getBearerTokenOrResponse();
+  if (response) return response;
+
+  const body = (await request.json()) as EmbedConfigFormInput & { id?: string };
+
+  // The backend splits create (POST, issues a key) from update (PUT). The
+  // presence of an id decides which one this save maps to.
+  const isUpdate = Boolean(body.id);
+  const url = isUpdate
+    ? embedUrl(`/configs/${encodeURIComponent(String(body.id))}`)
+    : embedUrl("/configs");
+
+  try {
+    const backendResponse = await fetch(url, {
+      method: isUpdate ? "PUT" : "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(toBackendConfigPayload(body)),
+    });
+
+    if (!backendResponse.ok) {
+      return NextResponse.json(
+        { detail: await readBackendError(backendResponse) },
+        { status: backendResponse.status },
+      );
+    }
+
+    const data = (await backendResponse.json()) as
+      | BackendEmbedConfig
+      | { config: BackendEmbedConfig; api_key: BackendApiKeyCreated };
+
+    if ("config" in data && data.config) {
+      return NextResponse.json({
+        config: toEmbedConfig(data.config),
+        // Raw key — forwarded once so the UI can show the one-time modal.
+        apiKey: data.api_key?.api_key,
+        key: data.api_key ? toApiKey(data.api_key) : undefined,
+      });
+    }
+
+    return NextResponse.json({
+      config: toEmbedConfig(data as BackendEmbedConfig),
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        detail:
+          error instanceof Error
+            ? error.message
+            : "Unable to reach the embed service.",
+      },
+      { status: 502 },
+    );
   }
-
-  const body = (await request.json()) as Partial<EmbedConfigInput>;
-  const config = await upsertEmbedConfig(user.id, {
-    id: body.id,
-    botName: body.botName ?? "AI Assistant",
-    welcomeMessage:
-      body.welcomeMessage ?? "Hi! Ask me anything about our documents.",
-    primaryColor: body.primaryColor ?? "#0f172a",
-    position: body.position ?? "bottom-right",
-    launcherLabel: body.launcherLabel ?? "Chat with us",
-    avatarInitials: body.avatarInitials ?? "AI",
-    allowedOrigins: body.allowedOrigins ?? [],
-    suggestedQuestions: body.suggestedQuestions ?? [],
-    fallbackMessage:
-      body.fallbackMessage ??
-      "I could not find a confident answer. Share your email and our team can follow up.",
-    collectVisitorEmail: body.collectVisitorEmail ?? true,
-    model: body.model,
-    isActive: body.isActive ?? true,
-  });
-
-  return NextResponse.json({ config });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type {
-  CreateEmbedConfigResponse,
+  ApiKey,
   EmbedConfig,
   EmbedFeedback,
   EmbedPosition,
@@ -191,6 +191,7 @@ export function EmbedBuilder() {
   const [previewWidth, setPreviewWidth] = useState(440);
   /** Raw API key held only long enough to show the one-time modal. */
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [issuedKey, setIssuedKey] = useState<ApiKey | null>(null);
   const [keyModalKind, setKeyModalKind] = useState<"created" | "rotated">(
     "created",
   );
@@ -224,6 +225,9 @@ export function EmbedBuilder() {
 
   function openStudio(id: string | null) {
     setSelectedId(id);
+    // The raw key belongs to one chatbot only — never carry it across.
+    setRevealedKey(null);
+    setIssuedKey(null);
     setActiveTab("brand");
     setNotice(id ? null : "Creating a new chatbot — save when ready.");
     setError(null);
@@ -339,15 +343,17 @@ export function EmbedBuilder() {
       return;
     }
 
-    const data =
-      (await response.json()) as Partial<CreateEmbedConfigResponse> & {
-        config: EmbedConfig;
-      };
+    const data = (await response.json()) as {
+      config: EmbedConfig;
+      apiKey?: string;
+      key?: ApiKey;
+    };
 
     // A brand-new chatbot returns its raw API key exactly once.
     if (isCreating && data.apiKey) {
       setKeyModalKind("created");
       setRevealedKey(data.apiKey);
+      setIssuedKey(data.key ?? null);
       setNotice("Chatbot created. Save your API key before closing.");
     } else {
       setNotice("Saved. Preview and install code updated.");
@@ -922,10 +928,12 @@ export function EmbedBuilder() {
                     {activeTab === "keys" && (
                       <ApiKeysPanel
                         botId={selectedId}
+                        issuedKey={issuedKey}
                         onError={setError}
-                        onKeyRotated={(rawKey) => {
+                        onKeyRotated={(rawKey, key) => {
                           setKeyModalKind("rotated");
                           setRevealedKey(rawKey);
+                          setIssuedKey(key);
                           setNotice(
                             "Key rotated. Update your install snippet.",
                           );

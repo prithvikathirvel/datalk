@@ -13,6 +13,11 @@ export const appConfig = {
     process.env.INGESTION_API_BASE_URL ?? "http://localhost:8000/api/v1",
   chatApiBaseUrl:
     process.env.CHAT_API_BASE_URL ?? "http://localhost:8001/api/v1",
+  /** Datalk Chat Service host that serves the embed endpoints. */
+  embedApiBaseUrl:
+    process.env.EMBED_BASE_URL ??
+    process.env.CHAT_API_BASE_URL ??
+    "http://localhost:8001",
 };
 
 export const cognitoConfig = {

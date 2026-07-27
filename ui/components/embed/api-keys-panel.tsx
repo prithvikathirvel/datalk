@@ -2,82 +2,33 @@
 
 import type { ApiKey } from "@template/contracts";
 import { Badge, Button } from "@template/ui";
-import { useCallback, useEffect, useState } from "react";
-import {
-  EmbedApiError,
-  fetchApiKeys,
-  maskKey,
-  rotateApiKey,
-} from "@/lib/embed-client";
+import { useState } from "react";
+import { rotateApiKey } from "@/lib/embed-client";
 import { formatDateTime } from "@/lib/format";
 
-function PendingBackendNotice() {
-  return (
-    <div className="rounded-xl border border-slate-200 border-dashed px-5 py-10 text-center">
-      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-5 w-5 text-slate-400"
-          aria-hidden="true"
-        >
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-      </div>
-      <p className="font-medium text-slate-700 text-sm">
-        API keys are not available yet
-      </p>
-      <p className="mx-auto mt-1 max-w-sm text-slate-400 text-xs leading-relaxed">
-        This chatbot was created before key-based authentication was enabled.
-        Once the key service is live, a key will be issued here.
-      </p>
-    </div>
-  );
-}
-
+/**
+ * API key management.
+ *
+ * The chat service exposes no "list keys" endpoint — a key prefix is only
+ * returned by create and rotate. So this panel reflects whatever key was
+ * issued during this session and otherwise explains that the key is
+ * write-only, which is the expected posture for a hashed secret.
+ */
 export function ApiKeysPanel({
   botId,
+  issuedKey,
   onKeyRotated,
   onError,
 }: {
   botId: string | null;
-  /** Receives the raw key so the parent can show the one-time modal. */
-  onKeyRotated: (rawKey: string) => void;
+  /** Metadata for a key issued during this session, if any. */
+  issuedKey: ApiKey | null;
+  /** Receives the raw key plus metadata so the parent can show the modal. */
+  onKeyRotated: (rawKey: string, key: ApiKey) => void;
   onError: (message: string) => void;
 }) {
-  const [keys, setKeys] = useState<ApiKey[]>([]);
-  const [loading, setLoading] = useState(false);
   const [rotating, setRotating] = useState(false);
-  const [pending, setPending] = useState(false);
   const [confirmRotate, setConfirmRotate] = useState(false);
-
-  const load = useCallback(async () => {
-    if (!botId) return;
-    setLoading(true);
-    try {
-      setKeys(await fetchApiKeys(botId));
-      setPending(false);
-    } catch (caught) {
-      if (caught instanceof EmbedApiError && caught.pending) {
-        setPending(true);
-      } else {
-        onError(
-          caught instanceof Error ? caught.message : "Unable to load API keys.",
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [botId, onError]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   async function handleRotate() {
     if (!botId) return;
@@ -85,8 +36,7 @@ export function ApiKeysPanel({
     setRotating(true);
     try {
       const result = await rotateApiKey(botId);
-      onKeyRotated(result.apiKey);
-      await load();
+      onKeyRotated(result.apiKey, result.key);
     } catch (caught) {
       onError(
         caught instanceof Error ? caught.message : "Unable to rotate the key.",
@@ -108,8 +58,6 @@ export function ApiKeysPanel({
       </div>
     );
   }
-
-  const activeKey = keys.find((key) => key.isActive) ?? keys[0] ?? null;
 
   return (
     <div className="space-y-5">
@@ -137,8 +85,9 @@ export function ApiKeysPanel({
               Rotate API key?
             </h3>
             <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
-              The current key stops working immediately. Any website using it
-              will break until you update the install snippet with the new key.
+              The current key is revoked immediately. Any website using it will
+              stop working until you update the install snippet with the new
+              key.
             </p>
             <div className="mt-5 flex gap-2">
               <Button
@@ -163,86 +112,73 @@ export function ApiKeysPanel({
       )}
 
       <p className="text-slate-400 text-xs">
-        The widget authenticates with this key. It is shown in full only once,
-        when created or rotated.
+        The widget authenticates with this key. It is shown in full only once —
+        when the chatbot is created, or when you rotate it.
       </p>
 
-      {pending ? (
-        <PendingBackendNotice />
-      ) : loading ? (
-        <div className="h-24 animate-pulse rounded-xl bg-slate-100" />
-      ) : !activeKey ? (
-        <PendingBackendNotice />
-      ) : (
-        <div className="rounded-xl border border-slate-200 bg-white">
-          <div className="flex items-center justify-between border-slate-100 border-b px-5 py-3.5">
-            <div>
-              <p className="font-semibold text-slate-950 text-sm">
-                {activeKey.name || "Default"}
-              </p>
+      <div className="rounded-xl border border-slate-200 bg-white">
+        <div className="flex items-center justify-between border-slate-100 border-b px-5 py-3.5">
+          <div>
+            <p className="font-semibold text-slate-950 text-sm">
+              {issuedKey?.name || "Default"}
+            </p>
+            {issuedKey && (
               <p className="mt-0.5 text-[11px] text-slate-400">
-                Created {formatDateTime(activeKey.createdAt)}
+                Created {formatDateTime(issuedKey.createdAt)}
               </p>
-            </div>
-            <Badge variant={activeKey.isActive ? "success" : "secondary"}>
-              {activeKey.isActive ? "Active" : "Revoked"}
-            </Badge>
+            )}
+          </div>
+          {issuedKey ? (
+            <Badge variant="success">Active</Badge>
+          ) : (
+            <Badge variant="secondary">Hidden</Badge>
+          )}
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div>
+            <p className="mb-1.5 font-medium text-slate-500 text-xs uppercase tracking-wide">
+              Key
+            </p>
+            <code className="block truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-[12px] text-slate-600">
+              {issuedKey
+                ? `${issuedKey.keyPrefix}${"•".repeat(20)}`
+                : "dk_live_••••••••••••••••••••••••"}
+            </code>
+            <p className="mt-1.5 text-slate-400 text-xs">
+              {issuedKey
+                ? "Only the prefix is stored. Lost the key? Rotate to issue a new one."
+                : "Keys are stored hashed and cannot be displayed again. Rotate to issue a new one."}
+            </p>
           </div>
 
-          <div className="space-y-4 p-5">
+          {issuedKey?.expiresAt && (
             <div>
-              <p className="mb-1.5 font-medium text-slate-500 text-xs uppercase tracking-wide">
-                Key
+              <p className="font-medium text-slate-500 text-xs uppercase tracking-wide">
+                Expires
               </p>
-              <code className="block truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-[12px] text-slate-600">
-                {maskKey(activeKey.keyPrefix)}
-              </code>
-              <p className="mt-1.5 text-slate-400 text-xs">
-                Only the prefix is stored. Lost the key? Rotate to issue a new
-                one.
+              <p className="mt-1 text-slate-700 text-sm">
+                {formatDateTime(issuedKey.expiresAt)}
               </p>
             </div>
+          )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="font-medium text-slate-500 text-xs uppercase tracking-wide">
-                  Last used
-                </p>
-                <p className="mt-1 text-slate-700 text-sm">
-                  {activeKey.lastUsedAt
-                    ? formatDateTime(activeKey.lastUsedAt)
-                    : "Never"}
-                </p>
-              </div>
-              <div>
-                <p className="font-medium text-slate-500 text-xs uppercase tracking-wide">
-                  Expires
-                </p>
-                <p className="mt-1 text-slate-700 text-sm">
-                  {activeKey.expiresAt
-                    ? formatDateTime(activeKey.expiresAt)
-                    : "Never"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 border-slate-100 border-t pt-4">
-              <p className="text-slate-400 text-xs">
-                Rotating revokes the current key immediately.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={rotating}
-                onClick={() => setConfirmRotate(true)}
-              >
-                {rotating ? "Rotating…" : "Rotate key"}
-              </Button>
-            </div>
+          <div className="flex items-center justify-between gap-3 border-slate-100 border-t pt-4">
+            <p className="text-slate-400 text-xs">
+              Rotating revokes the current key immediately.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={rotating}
+              onClick={() => setConfirmRotate(true)}
+            >
+              {rotating ? "Rotating…" : "Rotate key"}
+            </Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
