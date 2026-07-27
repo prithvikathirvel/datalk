@@ -1,0 +1,43 @@
+{
+  "name": "rag-saas-product",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full SaaS RAG frontend and BFF for ingestion, document management, semantic search, and document chatbot backends.",
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "ui",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm --workspace ui run dev",
+    "build": "npm --workspace ui run build",
+    "start": "npm --workspace ui run start",
+    "typecheck": "npm --workspace ui run typecheck",
+    "lint": "npm --workspace ui run lint",
+    "lint:fix": "npm --workspace ui run lint:fix",
+    "format": "npm --workspace ui run format",
+    "clean": "node -e \"require('fs').rmSync('ui/.next',{recursive:true,force:true});require('fs').rmSync('node_modules',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.23.0",
+    "next": "^15.3.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "^4.0.0",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.6",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.11.0",
+    "npm": ">=10.0.0"
+  }
+}
