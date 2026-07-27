@@ -131,43 +131,153 @@ function HeroSection() {
 
 function HeroProductCard() {
   return (
-    <div className="rounded-[2rem] border border-slate-200/80 bg-white p-3 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.28),inset_0_1px_0_white] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_90px_-30px_rgba(15,23,42,0.34)]">
-      <div className="rounded-[1.5rem] border border-white bg-gradient-to-br from-slate-50 to-white p-5 shadow-[inset_0_2px_20px_rgba(15,23,42,0.04)]">
-        <div className="flex items-center justify-between border-slate-200 border-b pb-4">
-          <div>
-            <p className="font-medium text-slate-950 text-sm">Answer Quality</p>
-            <p className="text-slate-500 text-xs">Last 7 days</p>
-          </div>
-          <Badge variant="success">+18%</Badge>
-        </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-[1fr_160px]">
-          <LineChart />
-          <div className="space-y-3">
-            <MetricTile label="Covered" value="87%" color="bg-emerald-500" />
-            <MetricTile label="Weak" value="9%" color="bg-amber-500" />
-            <MetricTile label="Missing" value="4%" color="bg-red-500" />
-          </div>
-        </div>
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="font-medium text-slate-700 text-sm">Knowledge gaps</span>
-            <span className="text-slate-400 text-xs">auto-detected</span>
-          </div>
-          <div className="space-y-2">
-            {[
-              ["Refund conditions", "Needs source"],
-              ["Cancellation timeline", "Weak answer"],
-              ["Regional pricing", "Missing"],
-            ].map(([title, status]) => (
-              <div key={title} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                <span className="text-slate-700 text-sm">{title}</span>
-                <span className="text-slate-400 text-xs">{status}</span>
+    <div className="group relative transition-transform duration-300 hover:-translate-y-1">
+      <div className="rounded-[2rem] border border-slate-200/80 bg-white p-3 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.28),inset_0_1px_0_white] transition-shadow duration-300 group-hover:shadow-[0_28px_90px_-30px_rgba(15,23,42,0.34)]">
+        <div className="overflow-hidden rounded-[1.5rem] border border-white bg-gradient-to-b from-slate-50 to-white shadow-[inset_0_2px_20px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center justify-between border-slate-200 border-b bg-white/80 px-5 py-4 backdrop-blur">
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 font-semibold text-sm text-white">
+                D
+                <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
               </div>
-            ))}
+              <div>
+                <p className="font-medium text-slate-950 text-sm">Datalk Assistant</p>
+                <p className="text-slate-400 text-xs">Answers from 1,284 documents</p>
+              </div>
+            </div>
+            <Badge variant="success">
+              <span className="mr-1.5 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+              Live widget
+            </Badge>
+          </div>
+
+          <div className="space-y-4 px-5 py-5">
+            <div className="flex justify-end">
+              <div className="max-w-[85%] rounded-2xl rounded-tr-md bg-slate-950 px-4 py-3 shadow-sm">
+                <p className="text-sm text-white leading-6">Can I get a refund after 30 days?</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-950 font-semibold text-white text-xs">D</div>
+              <div className="max-w-[85%] rounded-2xl rounded-tl-md border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <p className="text-slate-600 text-sm leading-6">
+                  Yes — annual plans are refundable within <span className="font-medium text-slate-950">45 days</span> of purchase. Monthly plans can be
+                  cancelled anytime and stay active until the end of the billing cycle.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <SourceChip name="Refund-Policy.pdf" page="p. 4" />
+                  <SourceChip name="Terms.pdf" page="p. 2" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700 text-xs ring-1 ring-emerald-200">
+                    <CheckIcon />
+                    0.94 confidence
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white">
+                <div className="flex gap-1">
+                  {[0, 150, 300].map((delay) => (
+                    <span key={delay} className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-400" style={{ animationDelay: `${delay}ms` }} />
+                  ))}
+                </div>
+              </div>
+              <div className="inline-flex items-center rounded-2xl rounded-tl-md border border-slate-200 bg-white px-4 py-3 text-slate-400 text-sm">
+                Searching documents…
+              </div>
+            </div>
+          </div>
+
+          <div className="border-slate-200 border-t bg-white/70 px-5 py-4">
+            <div className="mb-3 flex flex-wrap gap-2">
+              {["Cancellation timeline", "Enterprise pricing"].map((question) => (
+                <button
+                  key={question}
+                  type="button"
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-500 text-xs transition-colors hover:border-slate-300 hover:text-slate-950"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-2 pr-2 pl-4 shadow-sm">
+              <span className="flex-1 truncate text-slate-400 text-sm">Ask your documents…</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-white transition-transform duration-300 group-hover:rotate-12">
+                <SendIcon />
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      <div className="absolute -top-5 -right-3 z-20 hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_40px_-16px_rgba(15,23,42,0.25)] md:flex">
+        <CoverageRing />
+        <div>
+          <p className="font-semibold text-slate-950 text-sm">87% coverage</p>
+          <p className="text-slate-400 text-xs">42 questions tested</p>
+        </div>
+      </div>
+
+      <div className="absolute -bottom-6 -left-4 z-20 hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_40px_-16px_rgba(15,23,42,0.25)] md:flex">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
+          <CheckIcon className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="font-medium text-slate-950 text-sm">Source verified</p>
+          <p className="text-slate-400 text-xs">Refund-Policy.pdf · chunk #418</p>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function SourceChip({ name, page }: { name: string; page: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-slate-500 text-xs">
+      <svg className="h-3.5 w-3.5 text-slate-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M4 1.5h4.5L12 5V14.5H4V1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+        <path d="M8.5 1.5V5H12" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+      </svg>
+      {name} · {page}
+    </span>
+  );
+}
+
+function CoverageRing() {
+  const circumference = 2 * Math.PI * 20;
+  return (
+    <svg className="h-12 w-12 -rotate-90" viewBox="0 0 48 48" role="img" aria-label="Retrieval coverage ring showing 87 percent">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="#e2e8f0" strokeWidth="6" />
+      <circle
+        cx="24"
+        cy="24"
+        r="20"
+        fill="none"
+        stroke="#0f172a"
+        strokeLinecap="round"
+        strokeWidth="6"
+        strokeDasharray={`${circumference * 0.87} ${circumference}`}
+      />
+    </svg>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className ?? "h-3 w-3"} viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M2 6.4 4.6 9 10 3" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M17 3 3 10.2l6.6.5L17 17l0-14Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.4" />
+      <path d="M9.6 10.7 17 3" stroke="currentColor" strokeLinecap="round" strokeWidth="1.4" />
+    </svg>
   );
 }
 
@@ -409,53 +519,6 @@ function Footer() {
         </div>
       </div>
     </footer>
-  );
-}
-
-function MetricTile({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="flex items-center gap-2">
-        <span className={`h-2 w-2 rounded-full ${color}`} />
-        <span className="text-slate-500 text-xs">{label}</span>
-      </div>
-      <p className="mt-2 font-semibold text-xl text-slate-950">{value}</p>
-    </div>
-  );
-}
-
-function LineChart() {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-slate-500 text-xs">Answer confidence</span>
-        <span className="text-emerald-600 text-xs">+14.2%</span>
-      </div>
-      <svg className="h-44 w-full" viewBox="0 0 420 180" role="img" aria-label="Answer confidence chart">
-        <g stroke="#e2e8f0" strokeWidth="1">
-          {[30, 70, 110, 150].map((y) => (
-            <line key={y} x1="28" x2="410" y1={y} y2={y} />
-          ))}
-          {[80, 150, 220, 290, 360].map((x) => (
-            <line key={x} x1={x} x2={x} y1="16" y2="160" />
-          ))}
-        </g>
-        <path d="M32 132 C80 122 92 80 136 92 C182 106 188 44 236 56 C286 68 302 34 342 38 C374 42 386 30 408 24" fill="none" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
-        <path d="M32 132 C80 122 92 80 136 92 C182 106 188 44 236 56 C286 68 302 34 342 38 C374 42 386 30 408 24 L408 160 L32 160 Z" fill="url(#confidenceGradient)" opacity="0.28" />
-        <defs>
-          <linearGradient id="confidenceGradient" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#0f172a" />
-            <stop offset="100%" stopColor="#ffffff" />
-          </linearGradient>
-        </defs>
-        <g fill="#94a3b8" fontSize="10">
-          <text x="28" y="176">Mon</text>
-          <text x="138" y="176">Wed</text>
-          <text x="248" y="176">Fri</text>
-          <text x="358" y="176">Sun</text>
-        </g>
-      </svg>
-    </div>
   );
 }
 
