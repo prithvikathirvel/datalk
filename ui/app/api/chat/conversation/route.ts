@@ -1,4 +1,4 @@
-import type { ConversationResponse } from "@template/contracts";
+import type { ConversationDetail } from "@template/contracts";
 import { NextResponse } from "next/server";
 import {
   backendUrls,
@@ -22,10 +22,10 @@ export async function GET(request: Request) {
     );
   }
 
-  return proxyJson<ConversationResponse>(
+  return proxyJson<ConversationDetail>(
     joinUrl(
       backendUrls.chat,
-      `/chat/get-conversation?thread_id=${encodeURIComponent(threadId)}`,
+      `/chat/api/v1/conversation?thread_id=${encodeURIComponent(threadId)}`,
     ),
     {
       method: "GET",

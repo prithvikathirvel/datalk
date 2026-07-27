@@ -1,5 +1,7 @@
-import { ChatShell } from "@/components/chat/chat-shell";
+import { ConversationList } from "@/components/chat/conversation-list";
+
+export const metadata = { title: "Chat – Datalk" };
 
 export default function ChatPage() {
-  return <ChatShell />;
+  return <ConversationList />;
 }

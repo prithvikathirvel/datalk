@@ -119,6 +119,53 @@ export interface ConversationMessage {
   additional_kwargs: Record<string, unknown>;
 }
 
+/** Token accounting returned by the chat backend. */
+export interface ConversationUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+export interface ConversationMessageMetadata {
+  response_type?: string;
+  model?: string;
+  provider?: string;
+  response_time_ms?: number;
+  documents_retrieved?: number;
+  chunks_retrieved?: number;
+  is_answered?: boolean;
+  answer_status?: string;
+  feedback?: number;
+  [key: string]: unknown;
+}
+
+/** A single message of `GET /chat/api/v1/conversation?thread_id=…`. */
+export interface ConversationTurn {
+  id: string;
+  role: "user" | "assistant" | string;
+  content: string;
+  created_at: string;
+  metadata?: ConversationMessageMetadata;
+  usage?: ConversationUsage;
+}
+
+/** Response of `GET /chat/api/v1/conversation?thread_id=…`. */
+export interface ConversationDetail {
+  thread_id: string;
+  total_messages: number;
+  usage?: ConversationUsage;
+  messages: ConversationTurn[];
+}
+
+/** One row of `GET /chat/api/v1/conversations`. */
+export interface ConversationSummary {
+  id: string;
+  thread_id: string;
+  title: string;
+  bot_message: string;
+  created_at: string;
+}
+
 export interface ConversationResponse {
   success: boolean;
   thread_id: string;
