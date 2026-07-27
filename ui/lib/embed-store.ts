@@ -28,7 +28,10 @@ export interface EmbedConfigInput {
   isActive: boolean;
 }
 
-const dataDirectory = path.join(process.cwd(), ".data");
+const dataDirectory =
+  process.env.VERCEL
+    ? "/tmp/datalk"
+    : path.join(process.cwd(), ".data");
 const embedFile = path.join(dataDirectory, "embed-configs.json");
 
 const defaultStore: EmbedStoreShape = {
