@@ -6,6 +6,7 @@ import type {
   PresignedUrlResponse,
   SearchResponse,
   UploadConfig,
+  WebsiteIngestRequest,
 } from "@template/contracts";
 import { Badge, Button, Label } from "@template/ui";
 import { FileText, Globe, Link, Upload } from "lucide-react";
@@ -111,7 +112,7 @@ export function DocumentManager() {
     void loadFiles();
   }, [refreshToken, loadFiles]);
 
-  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  const totalSize = files.reduce((sum, f) => sum + (f?.size ?? 0), 0);
 
   return (
     <div className="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-white lg:h-screen">
@@ -197,6 +198,18 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
   const [pageRange, setPageRange] = useState("");
   const [extract, setExtract] = useState({ text: true, tables: true, images: true });
 
+  // Website crawl config
+  const [crawlMode, setCrawlMode] = useState<"deep" | "single">("deep");
+  const [maxDepth, setMaxDepth] = useState(2);
+  const [maxPages, setMaxPages] = useState(20);
+  const [includeSubdomains, setIncludeSubdomains] = useState(false);
+  const [includePathsInput, setIncludePathsInput] = useState("");
+  const [excludePathsInput, setExcludePathsInput] = useState("");
+  const [onlyMainContent, setOnlyMainContent] = useState(true);
+  const [includeImages, setIncludeImages] = useState(false);
+  const [includeTables, setIncludeTables] = useState(true);
+  const [waitFor, setWaitFor] = useState(0);
+
   const [step, setStep] = useState<UploadStep>("idle");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -207,6 +220,16 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
     setUrlInput("");
     setPageRange("");
     setExtract({ text: true, tables: true, images: true });
+    setCrawlMode("deep");
+    setMaxDepth(2);
+    setMaxPages(20);
+    setIncludeSubdomains(false);
+    setIncludePathsInput("");
+    setExcludePathsInput("");
+    setOnlyMainContent(true);
+    setIncludeImages(false);
+    setIncludeTables(true);
+    setWaitFor(0);
     setStep("idle");
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
@@ -346,8 +369,49 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
         setMessage({ type: "success", text: "Document uploaded and registered successfully." });
         resetForm();
         onUploaded();
+      } else if (source === "website") {
+        // Website crawl — build WebsiteIngestRequest
+        setStep("registering");
+
+        const parsePaths = (raw: string) =>
+          raw.split(",").map((p) => p.trim()).filter(Boolean);
+
+        const websitePayload: WebsiteIngestRequest = {
+          source: "website",
+          mode: "url",
+          url: urlInput.trim(),
+          config: {
+            mode: crawlMode,
+            maxDepth,
+            maxPages,
+            includeSubdomains,
+            includePaths: parsePaths(includePathsInput),
+            excludePaths: parsePaths(excludePathsInput),
+            onlyMainContent,
+            includeImages,
+            includeTables,
+            waitFor,
+          },
+        };
+
+        const uploadRes = await fetch("/api/ingest/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(websitePayload),
+        });
+
+        if (!uploadRes.ok) {
+          setMessage({ type: "error", text: await readError(uploadRes) });
+          setStep("idle");
+          return;
+        }
+
+        setStep("idle");
+        setMessage({ type: "success", text: "Website submitted for crawling." });
+        resetForm();
+        onUploaded();
       } else {
-        // file+url or website � single POST, no S3 step
+        // file + url mode — single POST, no S3 step
         setStep("registering");
 
         const payload: IngestRequest = {
@@ -514,7 +578,7 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
             label={source === "website" ? "Website URL" : "File URL"}
             placeholder={
               source === "website"
-                ? "https://example.com/document.pdf"
+                ? "https://example.com/"
                 : "https://example.com/file.pdf"
             }
             type="url"
@@ -529,44 +593,162 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
           />
         )}
 
-        {/* Processing config */}
-        <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Processing config
-          </p>
+        {/* Processing config — file only */}
+        {source === "file" && (
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Processing config
+            </p>
 
-          <TextInput
-            label="Page range"
-            placeholder="e.g. 1-5, 8, 10-12  (leave blank for all pages)"
-            value={pageRange}
-            onChange={(e) => setPageRange(e.target.value)}
-          />
+            <TextInput
+              label="Page range"
+              placeholder="e.g. 1-5, 8, 10-12  (leave blank for all pages)"
+              value={pageRange}
+              onChange={(e) => setPageRange(e.target.value)}
+            />
 
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-slate-700">Extract</Label>
-            <div className="flex flex-wrap gap-2">
-              {(["text", "tables", "images"] as const).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setExtract((prev) => ({ ...prev, [key]: !prev[key] }))}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                    extract[key]
-                      ? "border-slate-950 bg-slate-950 text-white"
-                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                  }`}
-                >
-                  {extract[key] && (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                  {key.charAt(0).toUpperCase() + key.slice(1)}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-slate-700">Extract</Label>
+              <div className="flex flex-wrap gap-2">
+                {(["text", "tables", "images"] as const).map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setExtract((prev) => ({ ...prev, [key]: !prev[key] }))}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      extract[key]
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                    }`}
+                  >
+                    {extract[key] && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Website crawl config */}
+        {source === "website" && (
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Crawl config
+            </p>
+
+            {/* Crawl mode */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-slate-700">Crawl mode</Label>
+              <div className="flex gap-1.5">
+                {(["deep", "single"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setCrawlMode(m)}
+                    className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      crawlMode === m
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                    }`}
+                  >
+                    {m.charAt(0).toUpperCase() + m.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Depth & pages */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-slate-700">Max depth</Label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={maxDepth}
+                  onChange={(e) => setMaxDepth(Number(e.target.value))}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-slate-700">Max pages</Label>
+                <input
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={maxPages}
+                  onChange={(e) => setMaxPages(Number(e.target.value))}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                />
+              </div>
+            </div>
+
+            {/* Toggles */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-slate-700">Options</Label>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { key: "includeSubdomains", label: "Include subdomains", value: includeSubdomains, set: setIncludeSubdomains },
+                  { key: "onlyMainContent", label: "Main content only", value: onlyMainContent, set: setOnlyMainContent },
+                  { key: "includeImages", label: "Include images", value: includeImages, set: setIncludeImages },
+                  { key: "includeTables", label: "Include tables", value: includeTables, set: setIncludeTables },
+                ] as const).map(({ key, label, value, set }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => set(!value)}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      value
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                    }`}
+                  >
+                    {value && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Path filters */}
+            <TextInput
+              label="Include paths (comma-separated)"
+              placeholder="/docs/*, /blog/*"
+              value={includePathsInput}
+              onChange={(e) => setIncludePathsInput(e.target.value)}
+            />
+            <TextInput
+              label="Exclude paths (comma-separated)"
+              placeholder="/privacy, /terms"
+              value={excludePathsInput}
+              onChange={(e) => setExcludePathsInput(e.target.value)}
+            />
+
+            {/* Wait for */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-slate-700">Wait for (ms)</Label>
+              <input
+                type="number"
+                min={0}
+                step={100}
+                value={waitFor}
+                onChange={(e) => setWaitFor(Number(e.target.value))}
+                placeholder="0"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+              />
+              <p className="text-[11px] text-slate-400">Milliseconds to wait for JS rendering before scraping</p>
+            </div>
+          </div>
+        )}
 
         {/* Submit */}
         <Button
@@ -650,18 +832,25 @@ function RecentUploadsPreview({
           <>
             <div className="divide-y divide-slate-100">
               {preview.map((file) => (
-                <div key={file.file_path} className="flex items-center gap-2.5 py-2.5">
+                <div key={file.id} className="flex items-center gap-2.5 py-2.5">
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-slate-500">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                    </svg>
+                    {file.type === "url" ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-slate-500">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-slate-500">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-medium text-slate-950">{file.filename}</p>
                     <p className="text-[11px] text-slate-400">{formatDateTime(file.last_modified)}</p>
                   </div>
-                  <span className="shrink-0 text-[11px] text-slate-400">{formatBytes(file.size)}</span>
+                  <span className="shrink-0 text-[11px] text-slate-400">{file.size != null ? formatBytes(file.size) : "URL"}</span>
                 </div>
               ))}
             </div>
@@ -809,16 +998,23 @@ function FilesTab({
             {files.map((file) => (
               <div key={file.id} className="flex items-center gap-3 p-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-500">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
+                  {file.type === "url" ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-500">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-500">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-slate-950 text-sm">{file.filename}</p>
                   <p className="truncate text-slate-400 text-xs">{formatDateTime(file.last_modified)}</p>
                 </div>
-                <Badge variant="secondary">{formatBytes(file.size)}</Badge>
+                <Badge variant="secondary">{file.size != null ? formatBytes(file.size) : "URL"}</Badge>
                 <button
                   type="button"
                   onClick={() => { setConfirmFile(file); setDeleteError(null); setSuccessMessage(null); }}

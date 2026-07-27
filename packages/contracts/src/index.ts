@@ -30,6 +30,26 @@ export interface IngestRequest {
   document_id?: string;
 }
 
+export interface WebsiteConfig {
+  mode: "deep" | "single";
+  maxDepth: number;
+  maxPages: number;
+  includeSubdomains: boolean;
+  includePaths: string[];
+  excludePaths: string[];
+  onlyMainContent: boolean;
+  includeImages: boolean;
+  includeTables: boolean;
+  waitFor: number;
+}
+
+export interface WebsiteIngestRequest {
+  source: "website";
+  mode: "url";
+  url: string;
+  config: WebsiteConfig;
+}
+
 export interface PresignedUrlRequest {
   filename: string;
   contentType: string;
@@ -45,7 +65,7 @@ export interface DocumentFile {
   filename: string;
   file_path: string;
   last_modified: string;
-  size: number;
+  size: number | null;
   type?: string;
 }
 
