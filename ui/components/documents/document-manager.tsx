@@ -850,7 +850,7 @@ function RecentUploadsPreview({
                     <p className="truncate text-xs font-medium text-slate-950">{file.filename}</p>
                     <p className="text-[11px] text-slate-400">{formatDateTime(file.last_modified)}</p>
                   </div>
-                  <span className="shrink-0 text-[11px] text-slate-400">{file.size != null ? formatBytes(file.size) : "URL"}</span>
+                  <span className="shrink-0 text-[11px] text-slate-400">{formatBytes(file.size)}</span>
                 </div>
               ))}
             </div>
@@ -1014,7 +1014,7 @@ function FilesTab({
                   <p className="truncate font-medium text-slate-950 text-sm">{file.filename}</p>
                   <p className="truncate text-slate-400 text-xs">{formatDateTime(file.last_modified)}</p>
                 </div>
-                <Badge variant="secondary">{file.size != null ? formatBytes(file.size) : "URL"}</Badge>
+                <Badge variant="secondary">{formatBytes(file.size)}</Badge>
                 <button
                   type="button"
                   onClick={() => { setConfirmFile(file); setDeleteError(null); setSuccessMessage(null); }}

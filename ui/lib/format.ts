@@ -1,4 +1,5 @@
-export function formatBytes(bytes: number) {
+export function formatBytes(bytes: number | null) {
+  if (bytes == null) return "—";
   if (bytes === 0) {
     return "0 B";
   }
