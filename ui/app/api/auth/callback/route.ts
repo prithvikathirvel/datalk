@@ -84,8 +84,17 @@ export async function GET(request: Request) {
     expires_in: number;
   };
 
-  // Persist the access token in an httpOnly cookie
+  // Persist the access token in an httpOnly cookie (used as Bearer for API calls)
   cookieStore.set("rag_saas_token", tokens.access_token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: tokens.expires_in,
+  });
+
+  // Persist the ID token separately — it carries email, name, and other profile claims
+  cookieStore.set("rag_saas_id_token", tokens.id_token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

@@ -12,11 +12,41 @@ export interface UploadResponse {
   status: number;
 }
 
+export interface UploadConfig {
+  pageRange: string;
+  extract: {
+    text: boolean;
+    tables: boolean;
+    images: boolean;
+  };
+}
+
+export interface IngestRequest {
+  source: "file" | "website";
+  mode: "upload" | "url";
+  file: string;
+  config: UploadConfig;
+  meta_data?: Record<string, string>;
+  document_id?: string;
+}
+
+export interface PresignedUrlRequest {
+  filename: string;
+  contentType: string;
+}
+
+export interface PresignedUrlResponse {
+  presignedUrl: string;
+  key: string;
+}
+
 export interface DocumentFile {
+  id: string;
   filename: string;
   file_path: string;
   last_modified: string;
   size: number;
+  type?: string;
 }
 
 export interface SearchResultMetadata {

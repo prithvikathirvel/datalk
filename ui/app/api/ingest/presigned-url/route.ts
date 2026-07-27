@@ -1,4 +1,4 @@
-import type { IngestRequest } from "@template/contracts";
+import type { PresignedUrlRequest, PresignedUrlResponse } from "@template/contracts";
 import { NextResponse } from "next/server";
 import { getBearerTokenOrResponse } from "@/lib/backend";
 
@@ -9,15 +9,15 @@ export async function POST(request: Request) {
   const { token, response } = await getBearerTokenOrResponse();
   if (response) return response;
 
-  let body: IngestRequest;
+  let body: PresignedUrlRequest;
   try {
-    body = (await request.json()) as IngestRequest;
+    body = (await request.json()) as PresignedUrlRequest;
   } catch {
     return NextResponse.json({ detail: "Invalid JSON body." }, { status: 400 });
   }
 
   try {
-    const upstream = await fetch(`${INGEST_API_BASE}/files/upload`, {
+    const upstream = await fetch(`${INGEST_API_BASE}/presigned-url`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -28,15 +28,17 @@ export async function POST(request: Request) {
 
     const contentType = upstream.headers.get("content-type") ?? "";
     const data = contentType.includes("application/json")
-      ? await upstream.json()
-      : { message: await upstream.text() };
+      ? ((await upstream.json()) as PresignedUrlResponse)
+      : { detail: await upstream.text() };
 
     return NextResponse.json(data, { status: upstream.status });
   } catch (error) {
     return NextResponse.json(
       {
         detail:
-          error instanceof Error ? error.message : "Unable to register document.",
+          error instanceof Error
+            ? error.message
+            : "Unable to reach presigned-url service.",
       },
       { status: 502 },
     );

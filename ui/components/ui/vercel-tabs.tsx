@@ -92,7 +92,7 @@ export const VercelTabs = React.forwardRef<HTMLDivElement, VercelTabsProps>(
                 }}
                 type="button"
                 className={cn(
-                  "relative inline-flex h-[30px] cursor-pointer select-none items-center gap-1.5 whitespace-nowrap px-3 text-sm font-medium transition-colors duration-200",
+                  "relative inline-flex h-[30px] cursor-pointer select-none items-center gap-1.5 whitespace-nowrap px-3 text-xs font-medium transition-colors duration-200",
                   index === activeIndex
                     ? "text-slate-950"
                     : "text-slate-400 hover:text-slate-700",

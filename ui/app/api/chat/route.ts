@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as ChatRequest;
-  return proxyJson<ChatResponse>(joinUrl(backendUrls.chat, "/chat/chat"), {
+  return proxyJson<ChatResponse>(joinUrl(backendUrls.chat, "/chat/api/v1/message"), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

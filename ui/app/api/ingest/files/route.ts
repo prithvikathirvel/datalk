@@ -13,7 +13,7 @@ export async function GET() {
   }
 
   return proxyJson<DocumentFile[]>(
-    joinUrl(backendUrls.ingestion, "/ingest/get-files"),
+    joinUrl(backendUrls.ingestion, "/rag/api/v1/documents/get-files"),
     {
       method: "GET",
       headers: {

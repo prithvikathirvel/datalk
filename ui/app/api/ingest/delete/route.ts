@@ -8,10 +8,11 @@ export async function DELETE(request: Request) {
   }
 
   const url = new URL(request.url);
-  const filePath = url.searchParams.get("file_path");
-  if (!filePath) {
+  const filename = url.searchParams.get("filename");
+  const type = url.searchParams.get("type");
+  if (!filename || !type) {
     return NextResponse.json(
-      { detail: "file_path is required." },
+      { detail: "filename and type are required." },
       { status: 400 },
     );
   }
@@ -20,7 +21,7 @@ export async function DELETE(request: Request) {
     const backendResponse = await fetch(
       joinUrl(
         backendUrls.ingestion,
-        `/ingest/delete-file?file_path=${encodeURIComponent(filePath)}`,
+        `/rag/api/v1/documents/delete-file?filename=${encodeURIComponent(filename)}&type=${encodeURIComponent(type)}`,
       ),
       {
         method: "DELETE",
