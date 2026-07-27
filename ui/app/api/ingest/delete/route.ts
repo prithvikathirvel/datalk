@@ -21,7 +21,7 @@ export async function DELETE(request: Request) {
     const backendResponse = await fetch(
       joinUrl(
         backendUrls.ingestion,
-        `/rag/api/v1/documents/delete-file?filename=${encodeURIComponent(filename)}&type=${encodeURIComponent(type)}`,
+        `/rag/api/v1/documents/delete-file?document_id=${encodeURIComponent(filename)}&type=${encodeURIComponent(type)}`,
       ),
       {
         method: "DELETE",
