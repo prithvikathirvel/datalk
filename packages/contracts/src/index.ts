@@ -180,6 +180,29 @@ export interface ConversationResponse {
 
 export type EmbedPosition = "bottom-right" | "bottom-left";
 
+/**
+ * API key metadata for an embed chatbot. The raw key is never stored or
+ * returned here — only the prefix is kept for display.
+ */
+export interface ApiKey {
+  id: string;
+  configId: string;
+  /** First 12 chars of the raw key, e.g. "dk_live_a1b2". */
+  keyPrefix: string;
+  name: string;
+  isActive: boolean;
+  lastUsedAt?: string;
+  expiresAt?: string;
+  createdAt: string;
+}
+
+/** A document assigned as a knowledge source for one chatbot. */
+export interface EmbedConfigSource {
+  documentId: string;
+  documentFilename: string;
+  addedAt: string;
+}
+
 export interface EmbedConfig {
   id: string;
   userId: string;
@@ -205,6 +228,26 @@ export interface EmbedConfig {
   widgetShadow?: "none" | "soft" | "strong";
   botDescription?: string;
   showPoweredBy?: boolean;
+  /**
+   * Documents this chatbot is allowed to search. Empty means unrestricted —
+   * the bot searches the user's whole library.
+   */
+  sourceDocumentIds?: string[];
+}
+
+/**
+ * Returned by `POST /api/embed/configs`. `apiKey` is the raw key and is sent
+ * exactly once — it cannot be retrieved again after this response.
+ */
+export interface CreateEmbedConfigResponse {
+  config: EmbedConfig;
+  apiKey: string;
+}
+
+/** Returned by `POST /api/embed/configs/[botId]/rotate-key`. */
+export interface RotateApiKeyResponse {
+  apiKey: string;
+  key: ApiKey;
 }
 
 export interface EmbedFeedback {
