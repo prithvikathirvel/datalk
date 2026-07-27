@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 
-const features = [
-  "Secure JWT-proxied backend",
-  "Embeddable chatbot widget",
-  "Coverage lab + knowledge gap inbox",
-];
+const features = [""];
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -20,10 +16,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         <div>
           <p className="font-medium text-2xl leading-9 text-slate-100">
-            &ldquo;Launch a document chatbot your customers can trust &mdash; without shipping new infrastructure.&rdquo;
+            &ldquo;Turn your source into AI that knows your business&rdquo;
           </p>
           <p className="mt-5 text-slate-400 text-sm leading-7">
-            Datalk gives you the full pipeline: ingestion, retrieval testing, an embed studio, and a knowledge-gap feedback loop.
+           Datalk helps you build AI assistants that search, understand, and answer from your knowledge. Upload your content and deploy reliable chatbots in minutes.
           </p>
         </div>
 

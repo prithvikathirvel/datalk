@@ -69,22 +69,22 @@ function SectionDivider({ top = true }: { top?: boolean }) {
 
 function HeroSection() {
   return (
-    <section className="relative z-10 pt-10 pb-20 md:pt-16 md:pb-24">
-        <nav className="mb-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 backdrop-blur">
+    <section className="relative z-10 pb-20 md:pb-15 p-5">
+        <nav className="mb-10 flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-3">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-950 font-semibold text-white">D</div>
           <span className="font-semibold text-slate-950">Datalk</span>
         </Link>
         <div className="hidden items-center gap-7 text-slate-500 text-sm md:flex">
-          <a href="#platform" className="transition-colors hover:text-slate-950">
+          {/* <a href="#platform" className="transition-colors hover:text-slate-950">
             Platform
           </a>
           <a href="#workflow" className="transition-colors hover:text-slate-950">
             Workflow
-          </a>
-          <a href="#pricing" className="transition-colors hover:text-slate-950">
+          </a> */}
+          {/* <a href="#pricing" className="transition-colors hover:text-slate-950">
             Pricing
-          </a>
+          </a> */}
         </div>
         <div className="flex items-center gap-2">
           <Link className="hidden rounded-full px-4 py-2 font-medium text-slate-600 text-sm transition-colors hover:text-slate-950 sm:inline-flex" href="/login">
@@ -98,12 +98,12 @@ function HeroSection() {
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center lg:gap-8">
         <div className="lg:col-span-6">
-          <Badge variant="outline">Document AI infrastructure</Badge>
-          <h1 className="mt-6 max-w-3xl font-semibold text-5xl text-slate-950 tracking-tight md:text-6xl lg:text-7xl">
-            Launch a document chatbot your customers can trust.
+          {/* <Badge variant="outline">Document AI infrastructure</Badge> */}
+          <h1 className="mt-6 max-w-3xl font-semibold text-5xl text-slate-950 tracking-tight md:text-6xl lg:text-6xl">
+            Turn your source into AI that knows your business.
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-slate-500 leading-8">
-            A professional SaaS workspace for ingestion, retrieval testing, embedded chatbots, and knowledge-gap improvement.
+            Datalk helps you build AI assistants that search, understand, and answer from your knowledge. Upload your content and deploy reliable chatbots in minutes.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link className="rounded-full bg-slate-950 px-6 py-3 font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-xl" href="/signup">
@@ -212,15 +212,15 @@ function HeroProductCard() {
         </div>
       </div>
 
-      <div className="absolute -top-5 -right-3 z-20 hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_40px_-16px_rgba(15,23,42,0.25)] md:flex">
+      {/* <div className="absolute -top-5 -right-3 z-20 hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_40px_-16px_rgba(15,23,42,0.25)] md:flex">
         <CoverageRing />
         <div>
           <p className="font-semibold text-slate-950 text-sm">87% coverage</p>
           <p className="text-slate-400 text-xs">42 questions tested</p>
         </div>
-      </div>
+      </div> */}
 
-      <div className="absolute -bottom-6 -left-4 z-20 hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_40px_-16px_rgba(15,23,42,0.25)] md:flex">
+      {/* <div className="absolute -bottom-6 -left-4 z-20 hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_40px_-16px_rgba(15,23,42,0.25)] md:flex">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
           <CheckIcon className="h-4 w-4" />
         </div>
@@ -228,7 +228,7 @@ function HeroProductCard() {
           <p className="font-medium text-slate-950 text-sm">Source verified</p>
           <p className="text-slate-400 text-xs">Refund-Policy.pdf · chunk #418</p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -310,7 +310,7 @@ function MiniHeroCard({ title, description, metric, label }: { title: string; de
 
 function DashboardSection() {
   return (
-    <section id="platform" className="relative z-10 py-24">
+    <section id="platform" className="relative z-10 py-24 p-5">
       <SectionDivider />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div className="lg:col-span-4">
@@ -383,7 +383,7 @@ function DashboardPreview() {
 
 function FeatureSection() {
   return (
-    <section className="relative z-10 py-24">
+    <section className="relative z-10 py-24 p-5">
       <SectionDivider />
       <div className="mx-auto max-w-3xl text-center">
         <Badge variant="outline">Capabilities</Badge>
@@ -414,7 +414,7 @@ function FeatureCard({ title, description }: { title: string; description: strin
 
 function WorkflowSection() {
   return (
-    <section id="workflow" className="relative z-10 py-24">
+    <section id="workflow" className="relative z-10 py-24 p-5">
       <SectionDivider />
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
         <div className="lg:col-span-5">
@@ -439,7 +439,7 @@ function WorkflowSection() {
 
 function PricingSection() {
   return (
-    <section id="pricing" className="relative z-10 py-24">
+    <section id="pricing" className="relative z-10 py-24 p-5">
       <SectionDivider />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <div className="lg:col-span-5">
@@ -481,7 +481,7 @@ function PricingSection() {
 
 function CtaSection() {
   return (
-    <section className="relative z-10 py-24">
+    <section className="relative z-10 py-24 p-5">
       <SectionDivider />
       <div className="rounded-[2rem] border border-slate-200 bg-slate-950 p-8 text-white shadow-sm md:p-12">
         <div className="grid gap-8 lg:grid-cols-12 lg:items-center">

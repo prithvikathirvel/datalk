@@ -221,7 +221,7 @@ function RecentDocuments({
         <div className="divide-y divide-slate-100">
           {files.slice(0, 5).map((file) => (
             <div
-              key={file.file_path}
+              key={file.id}
               className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
             >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
