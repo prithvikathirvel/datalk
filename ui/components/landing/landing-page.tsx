@@ -35,11 +35,7 @@ export function LandingPage() {
       <div className="relative mx-auto w-full max-w-[1360px] px-6 md:px-10 lg:px-16">
         <FrameLines />
         <HeroSection />
-        <DashboardSection />
-        <FeatureSection />
-        <WorkflowSection />
         <PricingSection />
-        <CtaSection />
         <Footer />
       </div>
     </main>
@@ -74,7 +70,7 @@ function SectionDivider({ top = true }: { top?: boolean }) {
 function HeroSection() {
   return (
     <section className="relative z-10 pt-10 pb-20 md:pt-16 md:pb-24">
-      <nav className="mb-20 flex items-center justify-between rounded-full border border-slate-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur">
+        <nav className="mb-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 backdrop-blur">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-950 font-semibold text-white">D</div>
           <span className="font-semibold text-slate-950">Datalk</span>
