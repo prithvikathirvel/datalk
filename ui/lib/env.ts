@@ -14,3 +14,15 @@ export const appConfig = {
   chatApiBaseUrl:
     process.env.CHAT_API_BASE_URL ?? "http://localhost:8001/api/v1",
 };
+
+export const cognitoConfig = {
+  domain: process.env.NEXT_PUBLIC_COGNITO_DOMAIN ?? "",
+  userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "",
+  userPoolClientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "",
+  redirectSignIn:
+    process.env.NEXT_PUBLIC_COGNITO_REDIRECT_SIGN_IN ??
+    "http://localhost:3000/api/auth/callback",
+  redirectSignOut:
+    process.env.NEXT_PUBLIC_COGNITO_REDIRECT_SIGN_OUT ??
+    "http://localhost:3000/login",
+};
