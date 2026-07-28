@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { embedUrl, readBackendError } from "@/lib/backend";
+import { readBackendError, widgetUrl } from "@/lib/backend";
 import { type BackendEmbedConfig, toEmbedConfig } from "@/lib/embed-mappers";
 
 /**
@@ -18,10 +18,17 @@ export async function GET(request: Request) {
     );
   }
 
+  const origin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+
   try {
-    const backendResponse = await fetch(embedUrl("/config"), {
+    const backendResponse = await fetch(widgetUrl("config"), {
       method: "GET",
-      headers: { "X-Api-Key": apiKey },
+      headers: {
+        "X-Api-Key": apiKey,
+        ...(origin && { origin }),
+        ...(referer && { referer }),
+      },
       cache: "no-store",
     });
 

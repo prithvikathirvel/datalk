@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { embedUrl, readBackendError } from "@/lib/backend";
+import { readBackendError, widgetUrl } from "@/lib/backend";
 
 /**
  * Public: relays a widget message to the embed chat pipeline. Document
@@ -32,12 +32,17 @@ export async function POST(request: Request) {
     );
   }
 
+  const origin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+
   try {
-    const backendResponse = await fetch(embedUrl("/chat"), {
+    const backendResponse = await fetch(widgetUrl("chat"), {
       method: "POST",
       headers: {
         "X-Api-Key": apiKey,
         "Content-Type": "application/json",
+        ...(origin && { origin }),
+        ...(referer && { referer }),
       },
       body: JSON.stringify({
         message: body.message,

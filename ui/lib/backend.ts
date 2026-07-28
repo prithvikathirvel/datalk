@@ -98,11 +98,19 @@ export const backendUrls = {
   embed: appConfig.embedApiBaseUrl,
 };
 
-/** All embed endpoints live under `<EMBED_BASE_URL>/chat/api/v1/embed`. */
+/** Authenticated embed-management endpoints: `<EMBED_BASE_URL>/chat/api/v1/embed/{path}`. */
 export function embedUrl(path: string) {
   return joinUrl(
     backendUrls.embed,
     `/chat/api/v1/embed/${path.replace(/^\//, "")}`,
+  );
+}
+
+/** Public widget endpoints (API-key auth): `<EMBED_BASE_URL>/widget/{path}`. */
+export function widgetUrl(path: string) {
+  return joinUrl(
+    backendUrls.embed,
+    `/widget/${path.replace(/^\//, "")}`,
   );
 }
 

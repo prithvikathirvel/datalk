@@ -4,6 +4,7 @@ import {
   embedUrl,
   getBearerTokenOrResponse,
   readBackendError,
+  widgetUrl,
 } from "@/lib/backend";
 import {
   type BackendEmbedFeedback,
@@ -40,12 +41,17 @@ export async function POST(request: Request) {
     );
   }
 
+  const origin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+
   try {
-    const backendResponse = await fetch(embedUrl("/feedback"), {
+    const backendResponse = await fetch(widgetUrl("feedback"), {
       method: "POST",
       headers: {
         "X-Api-Key": apiKey,
         "Content-Type": "application/json",
+        ...(origin && { origin }),
+        ...(referer && { referer }),
       },
       body: JSON.stringify({
         thread_id: body.threadId || null,

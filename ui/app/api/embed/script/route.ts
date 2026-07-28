@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { embedUrl, readBackendError } from "@/lib/backend";
+import { readBackendError, widgetUrl } from "@/lib/backend";
 import { type BackendEmbedConfig, toEmbedConfig } from "@/lib/embed-mappers";
 
 function scriptResponse(body: string, cache = false) {
@@ -27,28 +27,27 @@ export async function GET(request: Request) {
 
   let config: ReturnType<typeof toEmbedConfig>;
   try {
-    const backendResponse = await fetch(embedUrl(`/config?apiKey=${encodeURIComponent(apiKey)}`), {
+    const backendResponse = await fetch(widgetUrl(`config?apiKey=${encodeURIComponent(apiKey)}`), {
       method: "GET",
       headers: { "X-Api-Key": apiKey },
       cache: "no-store",
     });
 
-    console.log(`[embed] fetch → GET ${embedUrl(`/config?apiKey=${encodeURIComponent(apiKey)}`)} (apiKey=${apiKey})`);
+    console.log(`[embed] fetch → GET ${widgetUrl(`config?apiKey=${encodeURIComponent(apiKey)}`)} (apiKey=${apiKey})`);
     console.log(
-      `[embed] response ← ${backendResponse.status} ${embedUrl(`/config?apiKey=${encodeURIComponent(apiKey)}`)}`,
+      `[embed] response ← ${backendResponse.status} ${widgetUrl(`config?apiKey=${encodeURIComponent(apiKey)}`)}`,
     );
-    console.log(`[embed] response body ← ${await backendResponse.text()}`);
+
+    const responseText = await backendResponse.text();
+    console.log(`[embed] response body ← ${responseText}`);
 
     if (!backendResponse.ok) {
-      const detail = await readBackendError(backendResponse);
       return scriptResponse(
-        `console.warn(${JSON.stringify(`[Datalk] Chatbot unavailable: ${detail}`)});`,
+        `console.warn(${JSON.stringify(`[Datalk] Chatbot unavailable: ${responseText}`)});`,
       );
     }
 
-    config = toEmbedConfig(
-      (await backendResponse.json()) as BackendEmbedConfig,
-    );
+    config = toEmbedConfig(JSON.parse(responseText) as BackendEmbedConfig);
   } catch {
     return scriptResponse(
       "console.warn('[Datalk] Unable to reach the chatbot service.');",
