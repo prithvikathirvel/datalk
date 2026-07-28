@@ -1,20 +1,26 @@
 import { NextResponse } from "next/server";
 import { readBackendError, widgetUrl } from "@/lib/backend";
+import { corsPreflight, withCors } from "@/lib/cors";
 
 /**
  * Public: relays a widget message to the embed chat pipeline. Document
  * scoping is resolved server-side from the key, so nothing about the
  * knowledge base is exposed to the browser.
  */
+export async function OPTIONS(request: Request) {
+  return corsPreflight(request.headers.get("origin"));
+}
+
 export async function POST(request: Request) {
   const url = new URL(request.url);
   const apiKey =
     request.headers.get("x-api-key") ?? url.searchParams.get("apiKey");
+  const origin = request.headers.get("origin");
 
   if (!apiKey) {
-    return NextResponse.json(
-      { detail: "An API key is required." },
-      { status: 401 },
+    return withCors(
+      NextResponse.json({ detail: "An API key is required." }, { status: 401 }),
+      origin,
     );
   }
 
@@ -26,13 +32,12 @@ export async function POST(request: Request) {
   };
 
   if (!body.message?.trim()) {
-    return NextResponse.json(
-      { detail: "Message is required." },
-      { status: 400 },
+    return withCors(
+      NextResponse.json({ detail: "Message is required." }, { status: 400 }),
+      origin,
     );
   }
 
-  const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
 
   try {
@@ -53,22 +58,28 @@ export async function POST(request: Request) {
     });
 
     if (!backendResponse.ok) {
-      return NextResponse.json(
-        { detail: await readBackendError(backendResponse) },
-        { status: backendResponse.status },
+      return withCors(
+        NextResponse.json(
+          { detail: await readBackendError(backendResponse) },
+          { status: backendResponse.status },
+        ),
+        origin,
       );
     }
 
-    return NextResponse.json(await backendResponse.json());
+    return withCors(NextResponse.json(await backendResponse.json()), origin);
   } catch (error) {
-    return NextResponse.json(
-      {
-        detail:
-          error instanceof Error
-            ? error.message
-            : "Unable to reach the embed service.",
-      },
-      { status: 502 },
+    return withCors(
+      NextResponse.json(
+        {
+          detail:
+            error instanceof Error
+              ? error.message
+              : "Unable to reach the embed service.",
+        },
+        { status: 502 },
+      ),
+      origin,
     );
   }
 }

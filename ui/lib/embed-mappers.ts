@@ -7,37 +7,40 @@ import type {
 } from "@template/contracts";
 
 /**
- * Translation layer between the Datalk Chat Service (snake_case, per its
- * OpenAPI schema) and the camelCase contracts used across the UI.
+ * Translation layer between the Datalk Chat Service and the UI contracts.
+ * The embed config endpoints return camelCase JSON; the other endpoints
+ * (api_keys, feedback, sources) return snake_case — those shapes are kept
+ * as-is below.
  */
 
 // ─── Backend shapes ──────────────────────────────────────────────────────────
 
+/** Matches EmbedConfig / EmbedConfigPublic from the OpenAPI spec (camelCase). */
 export interface BackendEmbedConfig {
   id: string;
-  user_id?: string;
-  bot_name: string;
-  bot_description?: string | null;
-  welcome_message: string;
-  fallback_message: string;
-  suggested_questions?: string[];
-  primary_color?: string;
-  chat_background?: string | null;
+  userId?: string;
+  botName: string;
+  botDescription?: string | null;
+  welcomeMessage: string;
+  fallbackMessage: string;
+  suggestedQuestions?: string[];
+  primaryColor?: string;
+  chatBackground?: string | null;
   position?: string;
-  launcher_label?: string;
-  launcher_style?: "circle" | "rounded" | "square" | null;
-  avatar_initials: string;
-  border_radius_style?: string | null;
-  widget_shadow?: string | null;
-  font_family?: string | null;
-  show_powered_by?: boolean;
-  allowed_origins?: string[];
-  collect_visitor_email?: boolean;
-  is_active?: boolean;
+  launcherLabel?: string;
+  launcherStyle?: "circle" | "rounded" | "square" | null;
+  avatarInitials: string;
+  borderRadiusStyle?: string | null;
+  widgetShadow?: string | null;
+  fontFamily?: string | null;
+  showPoweredBy?: boolean;
+  allowedOrigins?: string[];
+  collectVisitorEmail?: boolean;
+  isActive?: boolean;
   model?: string | null;
-  source_document_ids?: string[];
-  created_at?: string;
-  updated_at?: string;
+  sourceDocumentIds?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BackendApiKeyCreated {
@@ -80,32 +83,31 @@ function optional(value: string | null | undefined) {
 export function toEmbedConfig(input: BackendEmbedConfig): EmbedConfig {
   return {
     id: input.id,
-    userId: input.user_id ?? "",
-    botName: input.bot_name,
-    botDescription: optional(input.bot_description),
-    welcomeMessage: input.welcome_message,
-    fallbackMessage: input.fallback_message,
-    suggestedQuestions: input.suggested_questions ?? [],
-    primaryColor: input.primary_color ?? "#0f172a",
-    chatBackground: optional(input.chat_background),
+    userId: input.userId ?? "",
+    botName: input.botName,
+    botDescription: optional(input.botDescription),
+    welcomeMessage: input.welcomeMessage,
+    fallbackMessage: input.fallbackMessage,
+    suggestedQuestions: input.suggestedQuestions ?? [],
+    primaryColor: input.primaryColor ?? "#0f172a",
+    chatBackground: optional(input.chatBackground),
     position: (input.position ?? "bottom-right") as EmbedPosition,
-    launcherLabel: input.launcher_label ?? "Chat",
-    launcherStyle: input.launcher_style ?? undefined,
-    avatarInitials: input.avatar_initials,
+    launcherLabel: input.launcherLabel ?? "Chat",
+    launcherStyle: input.launcherStyle ?? undefined,
+    avatarInitials: input.avatarInitials,
     borderRadiusStyle:
-      (input.border_radius_style as EmbedConfig["borderRadiusStyle"]) ??
-      undefined,
+      (input.borderRadiusStyle as EmbedConfig["borderRadiusStyle"]) ?? undefined,
     widgetShadow:
-      (input.widget_shadow as EmbedConfig["widgetShadow"]) ?? undefined,
-    fontFamily: optional(input.font_family),
-    showPoweredBy: input.show_powered_by ?? true,
-    allowedOrigins: input.allowed_origins ?? [],
-    collectVisitorEmail: input.collect_visitor_email ?? false,
-    isActive: input.is_active ?? true,
+      (input.widgetShadow as EmbedConfig["widgetShadow"]) ?? undefined,
+    fontFamily: optional(input.fontFamily),
+    showPoweredBy: input.showPoweredBy ?? true,
+    allowedOrigins: input.allowedOrigins ?? [],
+    collectVisitorEmail: input.collectVisitorEmail ?? false,
+    isActive: input.isActive ?? true,
     model: optional(input.model),
-    sourceDocumentIds: input.source_document_ids ?? [],
-    createdAt: input.created_at ?? "",
-    updatedAt: input.updated_at ?? "",
+    sourceDocumentIds: input.sourceDocumentIds ?? [],
+    createdAt: input.createdAt ?? "",
+    updatedAt: input.updatedAt ?? "",
   };
 }
 

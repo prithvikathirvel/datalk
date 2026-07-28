@@ -6,21 +6,27 @@ import {
   readBackendError,
   widgetUrl,
 } from "@/lib/backend";
+import { corsPreflight, withCors } from "@/lib/cors";
 import {
   type BackendEmbedFeedback,
   toEmbedFeedback,
 } from "@/lib/embed-mappers";
 
 /** Public: submits widget feedback, authenticated by API key. */
+export async function OPTIONS(request: Request) {
+  return corsPreflight(request.headers.get("origin"));
+}
+
 export async function POST(request: Request) {
   const url = new URL(request.url);
   const apiKey =
     request.headers.get("x-api-key") ?? url.searchParams.get("apiKey");
+  const origin = request.headers.get("origin");
 
   if (!apiKey) {
-    return NextResponse.json(
-      { detail: "An API key is required." },
-      { status: 401 },
+    return withCors(
+      NextResponse.json({ detail: "An API key is required." }, { status: 401 }),
+      origin,
     );
   }
 
@@ -35,13 +41,12 @@ export async function POST(request: Request) {
   };
 
   if (!body.question?.trim()) {
-    return NextResponse.json(
-      { detail: "Question is required." },
-      { status: 400 },
+    return withCors(
+      NextResponse.json({ detail: "Question is required." }, { status: 400 }),
+      origin,
     );
   }
 
-  const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
 
   try {
@@ -66,26 +71,32 @@ export async function POST(request: Request) {
     });
 
     if (!backendResponse.ok) {
-      return NextResponse.json(
-        { detail: await readBackendError(backendResponse) },
-        { status: backendResponse.status },
+      return withCors(
+        NextResponse.json(
+          { detail: await readBackendError(backendResponse) },
+          { status: backendResponse.status },
+        ),
+        origin,
       );
     }
 
     const data = (await backendResponse.json()) as BackendEmbedFeedback;
-    return NextResponse.json(
-      { feedback: toEmbedFeedback(data) },
-      { status: 201 },
+    return withCors(
+      NextResponse.json({ feedback: toEmbedFeedback(data) }, { status: 201 }),
+      origin,
     );
   } catch (error) {
-    return NextResponse.json(
-      {
-        detail:
-          error instanceof Error
-            ? error.message
-            : "Unable to reach the embed service.",
-      },
-      { status: 502 },
+    return withCors(
+      NextResponse.json(
+        {
+          detail:
+            error instanceof Error
+              ? error.message
+              : "Unable to reach the embed service.",
+        },
+        { status: 502 },
+      ),
+      origin,
     );
   }
 }
