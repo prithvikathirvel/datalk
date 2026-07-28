@@ -1,17 +1,22 @@
-import { Suspense } from "react";
+import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { LoginForm } from "@/components/auth/login-form";
 
-export default function LoginPage() {
+export const metadata: Metadata = {
+  title: "Sign in · Datalk",
+  description: "Sign in to your Datalk workspace with Google.",
+};
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; next?: string }>;
+}) {
+  const { error, next } = await searchParams;
+
   return (
     <AuthCard mode="login">
-      <Suspense
-        fallback={
-          <div className="h-64 animate-pulse rounded-2xl bg-slate-100" />
-        }
-      >
-        <LoginForm />
-      </Suspense>
+      <LoginForm error={error} next={next} />
     </AuthCard>
   );
 }

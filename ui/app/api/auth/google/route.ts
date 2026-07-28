@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN ?? "";
 const clientId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "";
@@ -8,7 +8,14 @@ const redirectUri =
   process.env.NEXT_PUBLIC_COGNITO_REDIRECT_SIGN_IN ??
   "http://localhost:3000/api/auth/callback";
 
-export async function GET() {
+/** Only allow same-origin relative paths, so `next` can never be used as an open redirect. */
+function safeNextPath(value: string | null): string | null {
+  if (!value) return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
+export async function GET(request: Request) {
   // Generate a random state value to prevent CSRF
   const state = randomBytes(32).toString("hex");
 
@@ -32,6 +39,18 @@ export async function GET() {
     path: "/",
     maxAge: 60 * 10, // 10 minutes
   });
+
+  // Remember where the user was heading so the callback can return them there
+  const next = safeNextPath(new URL(request.url).searchParams.get("next"));
+  if (next) {
+    cookieStore.set("cognito_oauth_next", next, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 10,
+    });
+  }
 
   return NextResponse.redirect(authorizeUrl);
 }

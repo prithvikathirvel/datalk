@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN ?? "";
 const clientId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "";
@@ -29,7 +29,9 @@ export async function GET(request: Request) {
   const savedState = cookieStore.get("cognito_oauth_state")?.value;
   cookieStore.delete("cognito_oauth_state");
   if (!savedState || savedState !== state) {
-    return NextResponse.redirect(new URL("/login?error=invalid_state", request.url));
+    return NextResponse.redirect(
+      new URL("/login?error=invalid_state", request.url),
+    );
   }
 
   // Exchange code for tokens at Cognito token endpoint
@@ -113,5 +115,13 @@ export async function GET(request: Request) {
     });
   }
 
-  return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Return the user to wherever they were originally heading, if it was safe
+  const nextPath = cookieStore.get("cognito_oauth_next")?.value;
+  cookieStore.delete("cognito_oauth_next");
+  const destination =
+    nextPath?.startsWith("/") && !nextPath.startsWith("//")
+      ? nextPath
+      : "/dashboard";
+
+  return NextResponse.redirect(new URL(destination, request.url));
 }

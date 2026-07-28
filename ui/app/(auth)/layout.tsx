@@ -1,45 +1,73 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
-const features = [""];
+const steps = [
+  "Upload your documents",
+  "Datalk indexes them for you",
+  "Paste one line and go live",
+];
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-2">
+    <div className="min-h-screen bg-[#fafafb] lg:grid lg:grid-cols-[1.05fr_1fr]">
       {/* Brand panel — desktop only */}
-      <div className="hidden flex-col justify-between bg-slate-950 p-12 text-white lg:flex">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 font-bold text-sm text-white">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-slate-950 p-12 text-white lg:flex">
+        <div
+          className="dk-animate-float pointer-events-none absolute -top-28 -left-20 h-80 w-80 rounded-full bg-white/5 blur-3xl"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -right-24 -bottom-28 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl"
+          aria-hidden="true"
+        />
+
+        <Link href="/" className="relative flex w-fit items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/10 font-semibold text-sm text-white ring-1 ring-white/15">
             D
-          </div>
+          </span>
           <span className="font-semibold text-lg tracking-tight">Datalk</span>
+        </Link>
+
+        <div className="relative max-w-md">
+          <h2 className="font-semibold text-3xl leading-tight tracking-tight">
+            Turn your documents into AI that answers customers.
+          </h2>
+          <p className="mt-4 text-slate-400 text-sm leading-7">
+            Upload the PDFs and help pages you already have. Datalk reads them,
+            learns them, and gives you a chatbot you can paste into your website
+            today.
+          </p>
+
+          <ol className="mt-9 space-y-3">
+            {steps.map((step, index) => (
+              <li
+                key={step}
+                className="dk-animate-fade-up flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-slate-200 text-sm ring-1 ring-white/10"
+                style={{ animationDelay: `${index * 120}ms` }}
+              >
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white font-semibold text-[11px] text-slate-950">
+                  {index + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
         </div>
 
-        <div>
-          <p className="font-medium text-2xl leading-9 text-slate-100">
-            &ldquo;Turn your source into AI that knows your business&rdquo;
-          </p>
-          <p className="mt-5 text-slate-400 text-sm leading-7">
-           Datalk helps you build AI assistants that search, understand, and answer from your knowledge. Upload your content and deploy reliable chatbots in minutes.
-          </p>
+        <div className="relative flex items-center justify-between text-slate-500 text-xs">
+          <p>&copy; 2026 Datalk</p>
+          <p>Live in 10 minutes &middot; No credit card</p>
         </div>
-
-        <div className="space-y-3">
-          {features.map((feature) => (
-            <div key={feature} className="flex items-center gap-3 text-slate-300 text-sm">
-              <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true">
-                <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
-              </svg>
-              {feature}
-            </div>
-          ))}
-          <p className="pt-6 text-slate-600 text-xs">&copy; 2026 Datalk</p>
-        </div>
-      </div>
+      </aside>
 
       {/* Form panel */}
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6 lg:min-h-0 lg:bg-white">
+      <main className="relative flex min-h-screen items-center justify-center p-6 lg:min-h-0">
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 hidden w-px bg-slate-200/70 lg:block"
+          aria-hidden="true"
+        />
         {children}
-      </div>
+      </main>
     </div>
   );
 }
