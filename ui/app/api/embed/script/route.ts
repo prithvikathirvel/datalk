@@ -27,11 +27,17 @@ export async function GET(request: Request) {
 
   let config: ReturnType<typeof toEmbedConfig>;
   try {
-    const backendResponse = await fetch(embedUrl("/config"), {
+    const backendResponse = await fetch(embedUrl(`/config?apiKey=${encodeURIComponent(apiKey)}`), {
       method: "GET",
       headers: { "X-Api-Key": apiKey },
       cache: "no-store",
     });
+
+    console.log(`[embed] fetch → GET ${embedUrl(`/config?apiKey=${encodeURIComponent(apiKey)}`)} (apiKey=${apiKey})`);
+    console.log(
+      `[embed] response ← ${backendResponse.status} ${embedUrl(`/config?apiKey=${encodeURIComponent(apiKey)}`)}`,
+    );
+    console.log(`[embed] response body ← ${await backendResponse.text()}`);
 
     if (!backendResponse.ok) {
       const detail = await readBackendError(backendResponse);

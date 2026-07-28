@@ -32,7 +32,7 @@ export async function GET() {
     }
 
     const data = (await backendResponse.json()) as BackendEmbedConfig[];
-    return NextResponse.json({ configs: data.map(toEmbedConfig) });
+    return NextResponse.json({ configs: data });
   } catch (error) {
     return NextResponse.json(
       {
