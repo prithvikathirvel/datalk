@@ -1097,6 +1097,17 @@ function FilesTab({
         </Button>
       </div>
 
+      <div className="mx-5 mt-3 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-px h-3.5 w-3.5 shrink-0 text-blue-500">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="8" />
+          <line x1="12" y1="12" x2="12" y2="16" />
+        </svg>
+        <p className="text-[11px] leading-4 text-blue-700">
+          After uploading, documents are processed in the background. Once the status changes to <span className="font-semibold">Completed</span>, the document is ready to be attached to your chatbot.
+        </p>
+      </div>
+
       <div>
         {successMessage && (
           <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-green-200 bg-green-50 p-3 text-green-700 text-sm">
