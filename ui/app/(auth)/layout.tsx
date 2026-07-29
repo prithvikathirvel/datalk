@@ -30,10 +30,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         <div className="relative max-w-md">
           <h2 className="font-semibold text-3xl leading-tight tracking-tight">
-            Turn your documents into AI that answers customers.
+            Turn your Sources into AI that answers customers.
           </h2>
           <p className="mt-4 text-slate-400 text-sm leading-7">
-            Upload the PDFs and help pages you already have. Datalk reads them,
+            Upload the Source and help pages you already have. Datalk reads them,
             learns them, and gives you a chatbot you can paste into your website
             today.
           </p>

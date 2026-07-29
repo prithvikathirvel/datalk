@@ -11,9 +11,9 @@ import {
 
 const features = [
   {
-    title: "Document ingestion",
+    title: "Knowledge ingestion",
     description:
-      "Upload, process, and verify knowledge before it reaches your chatbot.",
+      "Add PDFs, websites, or any source. Datalk processes and verifies them before your chatbot touches them.",
     metric: "2.4k",
     label: "chunks indexed",
   },
@@ -34,7 +34,7 @@ const features = [
 ];
 
 const workflow = [
-  "Upload processed documents",
+  "Add your knowledge sources",
   "Validate retrieval coverage",
   "Customize the website widget",
   "Monitor knowledge gaps",
@@ -46,7 +46,7 @@ export function LandingPage() {
       <div className="relative mx-auto w-full max-w-[1360px] px-6 md:px-10 lg:px-16">
         <FrameLines />
         <HeroSection />
-        <UseCaseMarquee />
+        {/* <UseCaseMarquee /> */}
         <OnboardingFlowSection />
         <OutcomeStrip />
         <BeforeAfterSection />
@@ -95,6 +95,9 @@ function HeroSection() {
             D
           </div>
           <span className="font-semibold text-slate-950">Datalk</span>
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 text-xs ring-1 ring-amber-200">
+            Beta
+          </span>
         </Link>
         <div className="hidden items-center gap-7 text-slate-500 text-sm md:flex">
           <a
@@ -128,26 +131,26 @@ function HeroSection() {
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center lg:gap-8">
         <div className="lg:col-span-6">
-          <span className="dk-animate-fade-up inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 text-xs shadow-sm">
+          {/* <span className="dk-animate-fade-up inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-amber-700 text-xs shadow-sm">
             <span className="relative flex h-2 w-2">
-              <span className="dk-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="dk-pulse-ring absolute inline-flex h-full w-full rounded-full bg-amber-500" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
             </span>
-            Live in 10 minutes · No code required
-          </span>
+            Public beta — early access now open
+          </span> */}
           <h1
             className="dk-animate-fade-up mt-6 max-w-3xl font-semibold text-5xl text-slate-950 tracking-tight md:text-6xl lg:text-6xl"
             style={{ animationDelay: "80ms" }}
           >
-            Turn your documents into AI that answers customers.
+            Turn your knowledge into AI that answers customers.
           </h1>
           <p
             className="dk-animate-fade-up mt-6 max-w-2xl text-lg text-slate-500 leading-8"
             style={{ animationDelay: "160ms" }}
           >
-            Upload the PDFs and help pages you already have. Datalk reads them,
-            learns them, and gives you a chatbot you can paste into your website
-            today — with every answer backed by a real source.
+            Add PDFs, website URLs, or help pages — whatever knowledge you already
+            have. Datalk reads it, indexes it, and gives you a chatbot ready to
+            paste on your website today. Every answer comes from your own sources.
           </p>
           <div
             className="dk-animate-fade-up mt-8 flex flex-wrap gap-3"
@@ -157,7 +160,7 @@ function HeroSection() {
               className="rounded-full bg-slate-950 px-6 py-3 font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-xl"
               href="/signup"
             >
-              Start free — upload your first doc
+              Start free — add your first source
             </Link>
             <a
               className="rounded-full border border-slate-200 bg-white px-6 py-3 font-medium text-slate-800 transition-all hover:-translate-y-0.5 hover:shadow-lg"
@@ -191,11 +194,11 @@ function HeroSection() {
         </div>
       </div>
 
-      <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
+      {/* <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
         {features.map((feature) => (
           <MiniHeroCard key={feature.title} {...feature} />
         ))}
-      </div>
+      </div> */}
     </section>
   );
 }
@@ -216,7 +219,7 @@ function HeroProductCard() {
                   Datalk Assistant
                 </p>
                 <p className="text-slate-400 text-xs">
-                  Answers from 1,284 documents
+                  Answers from 1,284 sources
                 </p>
               </div>
             </div>
@@ -270,7 +273,7 @@ function HeroProductCard() {
                 </div>
               </div>
               <div className="inline-flex items-center rounded-2xl rounded-tl-md border border-slate-200 bg-white px-4 py-3 text-slate-400 text-sm">
-                Searching documents…
+                Searching your sources…
               </div>
             </div>
           </div>
@@ -291,7 +294,7 @@ function HeroProductCard() {
             </div>
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-2 pr-2 pl-4 shadow-sm">
               <span className="flex-1 truncate text-slate-400 text-sm">
-                Ask your documents…
+                Ask anything…
               </span>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-white transition-transform duration-300 group-hover:rotate-12">
                 <SendIcon />
@@ -493,13 +496,13 @@ function DashboardPreview() {
         <div>
           <p className="font-semibold text-slate-950">Workspace analytics</p>
           <p className="text-slate-500 text-sm">
-            Documents, retrieval, and embedded chatbot performance
+            Sources, retrieval, and embedded chatbot performance
           </p>
         </div>
         <Badge variant="success">Live</Badge>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
-        <AnalyticsCard label="Documents indexed" value="1,284" change="+12%" />
+        <AnalyticsCard label="Sources indexed" value="1,284" change="+12%" />
         <AnalyticsCard
           label="Widget conversations"
           value="8,402"
@@ -559,7 +562,7 @@ function FeatureSection() {
       <div className="mx-auto max-w-3xl text-center">
         <Badge variant="outline">Capabilities</Badge>
         <h2 className="mt-5 font-semibold text-4xl text-slate-950 tracking-tight">
-          Everything required to publish reliable document AI.
+          Everything you need to publish reliable AI from your own knowledge.
         </h2>
         <p className="mt-4 text-slate-500 leading-7">
           Designed for teams that need more than a chatbot demo.
@@ -619,7 +622,7 @@ function WorkflowSection() {
         <div className="lg:col-span-5">
           <Badge variant="outline">How it works</Badge>
           <h2 className="mt-5 font-semibold text-4xl text-slate-950 tracking-tight">
-            From documents to production chatbot in four steps.
+            From sources to production chatbot in four steps.
           </h2>
         </div>
         <div className="lg:col-span-7">
@@ -657,8 +660,8 @@ function PricingSection() {
             Start small. Publish when ready.
           </h2>
           <p className="mt-4 text-slate-500 leading-7">
-            Use the built-in local auth for demos, then connect production
-            billing and database storage when you deploy.
+            Start with what you have — a PDF, a website, a help article.
+            Add more sources anytime. No limits on what you can connect.
           </p>
         </div>
         <div className="lg:col-span-7">
@@ -669,12 +672,12 @@ function PricingSection() {
                   Professional workspace
                 </p>
                 <p className="mt-2 text-slate-500">
-                  Documents, chat, embed builder, coverage lab, and gap inbox.
+                  Sources, chat, embed builder, coverage lab, and gap inbox.
                 </p>
               </div>
               <div className="text-left md:text-right">
-                <p className="font-semibold text-4xl text-slate-950">Custom</p>
-                <p className="text-slate-400 text-sm">bring your backends</p>
+                <p className="font-semibold text-4xl text-slate-950">Free</p>
+                <p className="text-slate-400 text-sm">during beta · no credit card</p>
               </div>
             </div>
             <div className="mt-6 grid gap-3 md:grid-cols-2">
@@ -708,11 +711,11 @@ function CtaSection() {
         <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-8">
             <h2 className="font-semibold text-4xl tracking-tight">
-              Give your customers answers from the documents you already own.
+              Your customers are asking. Give them proper answers from what you already have.
             </h2>
             <p className="mt-4 max-w-2xl text-slate-300 leading-7">
-              Connect your ingestion and chat services, upload processed files,
-              and publish a trustworthy embedded assistant.
+              Add your PDFs, websites, or help articles. Datalk turns them into
+              a chatbot your customers can trust — live on your site in minutes.
             </p>
           </div>
           <div className="flex gap-3 lg:col-span-4 lg:justify-end">
@@ -740,7 +743,7 @@ function Footer() {
     <footer className="relative z-10 py-10">
       <SectionDivider />
       <div className="flex flex-col justify-between gap-4 text-slate-500 text-sm md:flex-row md:items-center">
-        <p>© 2026 Datalk. Data talk workspace.</p>
+        <p>© 2026 Datalk. Data talk workspace. <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 text-xs">Beta</span></p>
         <div className="flex gap-5">
           <Link href="/login" className="hover:text-slate-950">
             Login

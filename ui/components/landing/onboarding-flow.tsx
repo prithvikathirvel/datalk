@@ -24,16 +24,16 @@ const steps: Step[] = [
     eyebrow: "Step 1",
     title: "Drop in what you already have",
     description:
-      "Drag your PDFs, help docs, policies, and product sheets into the workspace. No data cleaning, no schema, no engineer required.",
+      "Add PDFs, website URLs, help docs, Google Drive links — whatever knowledge you have. No data cleaning, no schema, no engineer required.",
     duration: "~2 minutes",
     outcome: "Files accepted and queued",
   },
   {
     id: "understand",
     eyebrow: "Step 2",
-    title: "Datalk reads and understands them",
+    title: "Datalk reads and understands everything",
     description:
-      "We split every document into searchable chunks, index the meaning behind the words, and show you exactly what the assistant now knows.",
+      "We split every source into searchable chunks, index the meaning behind the words, and show you exactly what the assistant now knows.",
     duration: "Automatic",
     outcome: "Knowledge base ready",
   },
@@ -296,7 +296,7 @@ function StageContent({ active }: { active: number }) {
 function UploadStage() {
   const files = [
     { name: "Refund-Policy.pdf", size: "1.2 MB", progress: 100 },
-    { name: "Product-Handbook.docx", size: "3.8 MB", progress: 100 },
+    { name: "help.example.com", size: "Website", progress: 100 },
     { name: "Support-FAQ.md", size: "240 KB", progress: 64 },
   ];
 
@@ -307,10 +307,10 @@ function UploadStage() {
           <UploadIcon />
         </div>
         <p className="mt-4 font-semibold text-slate-950">
-          Drop your documents here
+          Add your knowledge sources
         </p>
         <p className="mt-1 text-slate-500 text-sm">
-          PDF, Word, Markdown, or plain text — up to 100 MB per file
+          PDF, website URL, Google Drive, Markdown — up to 100 MB per file
         </p>
       </div>
 
@@ -370,7 +370,7 @@ function UnderstandStage() {
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
         {[
-          ["3", "documents"],
+          ["3", "sources"],
           ["1,284", "chunks"],
           ["100%", "indexed"],
         ].map(([value, label], index) => (

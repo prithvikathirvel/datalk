@@ -172,6 +172,9 @@ export function Sidebar({
               <span className="whitespace-nowrap font-semibold text-slate-950 tracking-tight">
                 Datalk
               </span>
+              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 font-medium text-amber-700 text-[10px] ring-1 ring-amber-200">
+                Beta
+              </span>
             </div>
             {/* Panel-left-close */}
             <button
