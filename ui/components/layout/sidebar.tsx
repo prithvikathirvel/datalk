@@ -166,8 +166,11 @@ export function Sidebar({
         {isOpen ? (
           <>
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-950 font-bold text-white text-xs">
-                D
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-950">
+                <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                  <path d="M6 7h4.5c2.49 0 4.5 2.01 4.5 4.5S12.99 16 10.5 16H6V7Z" fill="#ffffff"/>
+                  <circle cx="15.5" cy="7.5" r="2" fill="#10b981"/>
+                </svg>
               </div>
               <span className="whitespace-nowrap font-semibold text-slate-950 tracking-tight">
                 Datalk

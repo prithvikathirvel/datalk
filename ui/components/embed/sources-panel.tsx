@@ -2,7 +2,7 @@
 
 import type { DocumentFile } from "@template/contracts";
 import { Button, cn } from "@template/ui";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchSources, saveSources } from "@/lib/embed-client";
 import { formatDateTime } from "@/lib/format";
 
@@ -27,20 +27,23 @@ export function SourcesPanel({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
+  const loadedForBot = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     if (!botId) return;
     setLoading(true);
 
-    // The document library is independent of the sources endpoint, so load it
-    // even when source scoping is not deployed yet.
-    try {
-      const response = await fetch("/api/ingest/files", { cache: "no-store" });
-      if (response.ok) {
-        setFiles((await response.json()) as DocumentFile[]);
+    // Only fetch the document library if we haven't already loaded it for
+    // this bot, preventing redundant API calls on tab switches.
+    if (loadedForBot.current !== botId) {
+      try {
+        const response = await fetch("/api/ingest/files", { cache: "no-store" });
+        if (response.ok) {
+          setFiles((await response.json()) as DocumentFile[]);
+        }
+      } catch {
+        // Non-fatal: the checklist simply renders empty.
       }
-    } catch {
-      // Non-fatal: the checklist simply renders empty.
     }
 
     try {
@@ -53,6 +56,7 @@ export function SourcesPanel({
         caught instanceof Error ? caught.message : "Unable to load sources.",
       );
     } finally {
+      loadedForBot.current = botId;
       setLoading(false);
     }
   }, [botId, onError]);

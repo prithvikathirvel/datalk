@@ -227,6 +227,7 @@ export interface EmbedConfig {
   borderRadiusStyle?: "rounded" | "very-rounded" | "square";
   widgetShadow?: "none" | "soft" | "strong";
   botDescription?: string;
+  contextPrompt?: string;
   showPoweredBy?: boolean;
   /**
    * Documents this chatbot is allowed to search. Empty means unrestricted —

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <rect x="520" y="200" width="160" height="160" rx="32" fill="#1e293b"/>
+  <path d="M560 250h32.5c17.95 0 32.5 14.55 32.5 32.5S610.45 315 592.5 315H560V250Z" fill="#ffffff"/>
+  <circle cx="632" cy="252" r="15" fill="#10b981"/>
+  <text x="600" y="430" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="#ffffff">Datalk</text>
+  <text x="600" y="475" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#94a3b8">AI-Powered Document Chat &amp; Knowledge Assistant</text>
+</svg>
