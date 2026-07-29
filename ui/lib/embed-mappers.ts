@@ -21,6 +21,7 @@ export interface BackendEmbedConfig {
   userId?: string;
   botName: string;
   botDescription?: string | null;
+  contextPrompt?: string | null;
   welcomeMessage: string;
   fallbackMessage: string;
   suggestedQuestions?: string[];
@@ -86,6 +87,7 @@ export function toEmbedConfig(input: BackendEmbedConfig): EmbedConfig {
     userId: input.userId ?? "",
     botName: input.botName,
     botDescription: optional(input.botDescription),
+    contextPrompt: optional(input.contextPrompt),
     welcomeMessage: input.welcomeMessage,
     fallbackMessage: input.fallbackMessage,
     suggestedQuestions: input.suggestedQuestions ?? [],
@@ -179,6 +181,7 @@ function sanitizeHexColor(value: unknown, fallback: string) {
 export interface EmbedConfigFormInput {
   botName?: string;
   botDescription?: string;
+  contextPrompt?: string;
   welcomeMessage?: string;
   fallbackMessage?: string;
   suggestedQuestions?: string[];
@@ -213,6 +216,7 @@ export function toBackendConfigPayload(
   return {
     bot_name: input.botName?.trim() || "AI Assistant",
     bot_description: input.botDescription?.trim() || null,
+    context_prompt: input.contextPrompt?.trim() || null,
     welcome_message:
       input.welcomeMessage?.trim() ||
       "Hi! Ask me anything about our documents.",

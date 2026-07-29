@@ -1,0 +1,16 @@
+{
+  "name": "Datalk",
+  "short_name": "Datalk",
+  "description": "AI-Powered Document Chat & Knowledge Assistant",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

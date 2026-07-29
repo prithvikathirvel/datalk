@@ -53,6 +53,7 @@ const defaults = {
   borderRadiusStyle: "rounded" as const,
   widgetShadow: "soft" as const,
   botDescription: "Answers from your documents",
+  contextPrompt: "",
   showPoweredBy: true,
 };
 
@@ -246,14 +247,9 @@ export function EmbedBuilder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadAll(nextSelectedId?: string | null) {
-    setLoading(true);
+  async function loadConfigs(nextSelectedId?: string | null) {
     setError(null);
-    const [configsResponse, feedbackResponse] = await Promise.all([
-      fetch("/api/embed/configs", { cache: "no-store" }),
-      fetch("/api/embed/feedback", { cache: "no-store" }),
-    ]);
-    setLoading(false);
+    const configsResponse = await fetch("/api/embed/configs", { cache: "no-store" });
 
     if (!configsResponse.ok) {
       setError(await readError(configsResponse));
@@ -267,13 +263,23 @@ export function EmbedBuilder() {
     if (nextSelectedId !== undefined) {
       setSelectedId(nextSelectedId);
     }
+  }
 
+  async function loadFeedback() {
+    const feedbackResponse = await fetch("/api/embed/feedback", { cache: "no-store" });
     if (feedbackResponse.ok) {
       const feedbackData = (await feedbackResponse.json()) as {
         feedback: EmbedFeedback[];
       };
       setFeedback(feedbackData.feedback);
     }
+  }
+
+  async function loadAll(nextSelectedId?: string | null) {
+    setLoading(true);
+    setError(null);
+    await Promise.all([loadConfigs(nextSelectedId), loadFeedback()]);
+    setLoading(false);
   }
 
   async function saveConfig(event: FormEvent<HTMLFormElement>) {
@@ -334,6 +340,7 @@ export function EmbedBuilder() {
         ) as EmbedConfig["widgetShadow"],
         fontFamily: String(formData.get("fontFamily") ?? defaults.fontFamily),
         showPoweredBy: formData.get("showPoweredBy") === "on",
+        contextPrompt: String(formData.get("contextPrompt") ?? ""),
       }),
     });
 
@@ -359,7 +366,7 @@ export function EmbedBuilder() {
       setNotice("Saved. Preview and install code updated.");
     }
 
-    await loadAll(data.config.id);
+    await loadConfigs(data.config.id);
     setSelectedId(data.config.id);
     setStudioMode(true);
   }
@@ -374,7 +381,7 @@ export function EmbedBuilder() {
       return;
     }
     setNotice("Embed chatbot deleted.");
-    await loadAll(null);
+    await loadConfigs(null);
     setStudioMode(false);
   }
 
@@ -407,7 +414,29 @@ export function EmbedBuilder() {
               Deploy chatbots powered by your Datalk knowledge base
             </p>
           </div>
-          <Button onClick={() => openStudio(null)} size="sm">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void loadAll()}
+              disabled={loading}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              >
+                <path d="M21 12a9 9 0 0 1-2.64-6.36" />
+                <polyline points="21 3 21 9 15 9" />
+              </svg>
+              Refresh
+            </Button>
+            <Button onClick={() => openStudio(null)} size="sm">
             <svg
               viewBox="0 0 16 16"
               fill="currentColor"
@@ -418,6 +447,7 @@ export function EmbedBuilder() {
             </svg>
             New chatbot
           </Button>
+          </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
           {error && (
@@ -836,6 +866,22 @@ export function EmbedBuilder() {
                         }
                       />
                     </Field>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="contextPrompt">Context Prompt</Label>
+                      <Textarea
+                        id="contextPrompt"
+                        name="contextPrompt"
+                        rows={5}
+                        placeholder="You are the support assistant for Acme Store. Help customers with product details, shipping, returns, refunds, and warranty questions. Use the knowledge base first. If information is missing, ask the customer to contact support@acme.com. Keep answers short, friendly, and accurate."
+                        defaultValue={
+                          selected?.contextPrompt ?? defaults.contextPrompt
+                        }
+                      />
+                      <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+                        Private business/customer context and behavior instructions for the chatbot.
+                        This guides the bot&apos;s personality, scope, and how it handles questions.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Sources */}

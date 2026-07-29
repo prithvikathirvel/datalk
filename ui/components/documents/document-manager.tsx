@@ -9,7 +9,6 @@ import type {
   WebsiteIngestRequest,
 } from "@template/contracts";
 import { Badge, Button, Label } from "@template/ui";
-import { FileText, Globe, Link, Upload } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { VercelTabs } from "@/components/ui/vercel-tabs";
@@ -448,341 +447,424 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white">
-      <div className="border-b border-slate-100 px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-slate-950">Add document</h2>
-        <p className="mt-0.5 text-[11px] text-slate-400">
-          Add content to your Datalk knowledge base
-        </p>
+    <div className="space-y-6">
+      {/* ── Source type selector ── */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => handleSourceChange("file")}
+          className={`group relative flex flex-col items-start gap-3 rounded-2xl border-2 p-5 text-left transition-all ${
+            source === "file"
+              ? "border-slate-950 bg-slate-50 shadow-sm"
+              : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+          }`}
+        >
+          <div className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
+            source === "file" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200"
+          }`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="12" y1="18" x2="12" y2="12" />
+              <line x1="9" y1="15" x2="12" y2="12" />
+              <line x1="15" y1="15" x2="12" y2="12" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-950">Upload File</p>
+            <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+              Drag & drop or browse PDFs, DOCX, TXT, and more
+            </p>
+          </div>
+          {source === "file" && (
+            <div className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><polyline points="20 6 9 17 4 12" /></svg>
+            </div>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSourceChange("website")}
+          className={`group relative flex flex-col items-start gap-3 rounded-2xl border-2 p-5 text-left transition-all ${
+            source === "website"
+              ? "border-slate-950 bg-slate-50 shadow-sm"
+              : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+          }`}
+        >
+          <div className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
+            source === "website" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200"
+          }`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-950">Import Website</p>
+            <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+              Crawl and index web pages automatically
+            </p>
+          </div>
+          {source === "website" && (
+            <div className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><polyline points="20 6 9 17 4 12" /></svg>
+            </div>
+          )}
+        </button>
       </div>
 
-      <form className="space-y-4 p-5" onSubmit={handleSubmit}>
+      {/* ── Main upload form card ── */}
+      <form onSubmit={handleSubmit}>
+        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+          <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+            <h2 className="font-semibold text-slate-950">
+              {source === "file" ? "File upload" : "Website import"}
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-400">
+              {source === "file"
+                ? "Upload documents to build your knowledge base"
+                : "Enter a URL to crawl and index web content"}
+            </p>
+          </div>
 
-        {/* Source selector */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-slate-700">Source</Label>
-          <div className="flex gap-1.5">
-            {(["file", "website"] as UploadSource[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => handleSourceChange(s)}
-                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  source === s
-                    ? "border-slate-950 bg-slate-950 text-white"
-                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+          <div className="space-y-5 p-6">
+
+            {/* Upload method toggle for File source */}
+            {source === "file" && (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-slate-700">Upload method</Label>
+                <div className="flex gap-2">
+                  {(["upload", "url"] as UploadMode[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => handleModeChange(m)}
+                      className={`flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors ${
+                        mode === m
+                          ? "border-slate-950 bg-slate-950 text-white"
+                          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                      }`}
+                    >
+                      {m === "upload" ? (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+                      )}
+                      {m === "upload" ? "Browse files" : "From URL"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Drop zone / File picker ── */}
+            {source === "file" && mode === "upload" && (
+              <div
+                className={`relative rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
+                  dragOver
+                    ? "border-slate-950 bg-slate-50"
+                    : selectedFile
+                      ? "border-emerald-300 bg-emerald-50/50"
+                      : "border-slate-200 bg-slate-50/30 hover:border-slate-300"
+                }`}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }}
+                  accept=".pdf,.docx,.txt,.md,.csv,.json,.html,.xml"
+                />
+                {selectedFile ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-emerald-600">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-950">{selectedFile.name}</p>
+                      <p className="mt-1 text-xs text-slate-400">{formatBytes(selectedFile.size)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                      className="text-xs text-slate-500 underline underline-offset-2 hover:text-slate-700"
+                    >
+                      Choose a different file
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-slate-400">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-700">
+                        Drop your file here, or{" "}
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-slate-950 underline underline-offset-2 hover:text-slate-700"
+                        >
+                          browse
+                        </button>
+                      </p>
+                      <p className="mt-1.5 text-xs text-slate-400">
+                        PDF, DOCX, TXT, Markdown, CSV, JSON, HTML — up to 50 MB
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── URL input for file or website mode ── */}
+            {(source === "website" || (source === "file" && mode === "url")) && (
+              <div className="space-y-2">
+                <Label htmlFor="urlInput" className="text-xs font-medium text-slate-700">
+                  {source === "website" ? "Website URL" : "Document URL"}
+                </Label>
+                <div className="relative">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="-translate-y-1/2 absolute top-1/2 left-3.5 h-4 w-4 text-slate-400">
+                    {source === "website" ? (
+                      <><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>
+                    ) : (
+                      <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></>
+                    )}
+                  </svg>
+                  <input
+                    id="urlInput"
+                    type="url"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    placeholder={source === "website" ? "https://example.com/docs" : "https://example.com/document.pdf"}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-950 placeholder:text-slate-400 outline-none transition-colors focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                  />
+                </div>
+                {source === "website" && (
+                  <p className="text-xs text-slate-400">We'll crawl this URL and index all linked pages.</p>
+                )}
+              </div>
+            )}
+
+            {/* ── Processing config (file source) ── */}
+            {source === "file" && (
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-400">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                  <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Processing options</p>
+                </div>
+
+                <TextInput
+                  label="Page range"
+                  placeholder="e.g. 1-5, 8, 10-12  (leave blank for all pages)"
+                  value={pageRange}
+                  onChange={(e) => setPageRange(e.target.value)}
+                />
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-slate-700">Extract content</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {(["text", "tables", "images"] as const).map((key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setExtract((prev) => ({ ...prev, [key]: !prev[key] }))}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          extract[key]
+                            ? "border-slate-950 bg-slate-950 text-white"
+                            : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                        }`}
+                      >
+                        {extract[key] && (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><polyline points="20 6 9 17 4 12" /></svg>
+                        )}
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Crawl config (website source) ── */}
+            {source === "website" && (
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-400">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                  <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Crawl settings</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-slate-700">Crawl mode</Label>
+                  <div className="flex gap-2">
+                    {(["deep", "single"] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setCrawlMode(m)}
+                        className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors ${
+                          crawlMode === m
+                            ? "border-slate-950 bg-slate-950 text-white"
+                            : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                        }`}
+                      >
+                        {m === "deep" ? "Deep crawl" : "Single page"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-slate-700">Max depth</Label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={maxDepth}
+                      onChange={(e) => setMaxDepth(Number(e.target.value))}
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-slate-700">Max pages</Label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={maxPages}
+                      onChange={(e) => setMaxPages(Number(e.target.value))}
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-slate-700">Options</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      { key: "includeSubdomains", label: "Include subdomains", value: includeSubdomains, set: setIncludeSubdomains },
+                      { key: "onlyMainContent", label: "Main content only", value: onlyMainContent, set: setOnlyMainContent },
+                      { key: "includeImages", label: "Include images", value: includeImages, set: setIncludeImages },
+                      { key: "includeTables", label: "Include tables", value: includeTables, set: setIncludeTables },
+                    ] as const).map(({ key, label, value, set }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => set(!value)}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          value
+                            ? "border-slate-950 bg-slate-950 text-white"
+                            : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                        }`}
+                      >
+                        {value && (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><polyline points="20 6 9 17 4 12" /></svg>
+                        )}
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <TextInput
+                  label="Include paths (comma-separated)"
+                  placeholder="/docs/*, /blog/*"
+                  value={includePathsInput}
+                  onChange={(e) => setIncludePathsInput(e.target.value)}
+                />
+                <TextInput
+                  label="Exclude paths (comma-separated)"
+                  placeholder="/privacy, /terms"
+                  value={excludePathsInput}
+                  onChange={(e) => setExcludePathsInput(e.target.value)}
+                />
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-slate-700">Wait for (ms)</Label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={100}
+                    value={waitFor}
+                    onChange={(e) => setWaitFor(Number(e.target.value))}
+                    placeholder="0"
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                  />
+                  <p className="text-[11px] text-slate-400">Milliseconds to wait for JS rendering before scraping</p>
+                </div>
+              </div>
+            )}
+
+            {/* ── Submit button ── */}
+            <div className="flex items-center gap-3 pt-2">
+              <Button
+                className="flex-1"
+                type="submit"
+                disabled={
+                  uploading ||
+                  (source === "file" && mode === "upload" && !selectedFile) ||
+                  ((source === "website" || (source === "file" && mode === "url")) && !urlInput.trim())
+                }
+              >
+                {uploading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    {STEP_LABEL[step]}
+                  </span>
+                ) : source === "file" ? "Upload document" : "Start crawling"}
+              </Button>
+              {(selectedFile || urlInput) && !uploading && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* ── Status message ── */}
+            {message && (
+              <div
+                className={`flex items-start gap-2.5 rounded-xl border p-4 text-sm ${
+                  message.type === "success"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-red-200 bg-red-50 text-red-700"
                 }`}
               >
-                {s === "file" ? (
-                  <FileText className="h-3.5 w-3.5" />
-                ) : (
-                  <Globe className="h-3.5 w-3.5" />
-                )}
-                {s === "file" ? "File" : "Website"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Mode selector (File source only) */}
-        {source === "file" && (
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-slate-700">Mode</Label>
-            <div className="flex gap-1.5">
-              {(["upload", "url"] as UploadMode[]).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => handleModeChange(m)}
-                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    mode === m
-                      ? "border-slate-950 bg-slate-950 text-white"
-                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                  }`}
-                >
-                  {m === "upload" ? (
-                    <Upload className="h-3.5 w-3.5" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 h-4 w-4 shrink-0">
+                  {message.type === "success" ? (
+                    <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>
                   ) : (
-                    <Link className="h-3.5 w-3.5" />
+                    <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>
                   )}
-                  {m === "upload" ? "Upload file" : "From URL"}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* File drop zone (file + upload mode) */}
-        {source === "file" && mode === "upload" && (
-          <div
-            className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${
-              dragOver
-                ? "border-slate-950 bg-slate-50"
-                : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-            }`}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
-            role="button"
-            tabIndex={0}
-            aria-label="Upload file drop zone"
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="sr-only"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFileSelect(file);
-              }}
-            />
-            {selectedFile ? (
-              <>
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-950">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-white">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                </div>
-                <p className="font-medium text-sm text-slate-950">{selectedFile.name}</p>
-                <p className="mt-1 text-xs text-slate-400">{formatBytes(selectedFile.size)}</p>
-                <button
-                  type="button"
-                  className="mt-2 text-xs text-slate-400 hover:text-red-500 transition-colors"
-                  onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
-                >
-                  Remove
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-slate-400">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                </div>
-                <p className="font-medium text-sm text-slate-700">Drop a file here</p>
-                <p className="mt-1 text-xs text-slate-400">or click to browse</p>
-              </>
+                </svg>
+                {message.text}
+              </div>
             )}
           </div>
-        )}
-
-        {/* URL input (file+url or website) */}
-        {(source === "website" || (source === "file" && mode === "url")) && (
-          <TextInput
-            label={source === "website" ? "Website URL" : "File URL"}
-            placeholder={
-              source === "website"
-                ? "https://example.com/"
-                : "https://example.com/file.pdf"
-            }
-            type="url"
-            value={urlInput}
-            onChange={(e) => { setUrlInput(e.target.value); setMessage(null); }}
-            icon={
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
-            }
-          />
-        )}
-
-        {/* Processing config — file only */}
-        {source === "file" && (
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Processing config
-            </p>
-
-            <TextInput
-              label="Page range"
-              placeholder="e.g. 1-5, 8, 10-12  (leave blank for all pages)"
-              value={pageRange}
-              onChange={(e) => setPageRange(e.target.value)}
-            />
-
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-slate-700">Extract</Label>
-              <div className="flex flex-wrap gap-2">
-                {(["text", "tables", "images"] as const).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setExtract((prev) => ({ ...prev, [key]: !prev[key] }))}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                      extract[key]
-                        ? "border-slate-950 bg-slate-950 text-white"
-                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                    }`}
-                  >
-                    {extract[key] && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Website crawl config */}
-        {source === "website" && (
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Crawl config
-            </p>
-
-            {/* Crawl mode */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-slate-700">Crawl mode</Label>
-              <div className="flex gap-1.5">
-                {(["deep", "single"] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setCrawlMode(m)}
-                    className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      crawlMode === m
-                        ? "border-slate-950 bg-slate-950 text-white"
-                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                    }`}
-                  >
-                    {m.charAt(0).toUpperCase() + m.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Depth & pages */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-slate-700">Max depth</Label>
-                <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={maxDepth}
-                  onChange={(e) => setMaxDepth(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-slate-700">Max pages</Label>
-                <input
-                  type="number"
-                  min={1}
-                  max={500}
-                  value={maxPages}
-                  onChange={(e) => setMaxPages(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
-                />
-              </div>
-            </div>
-
-            {/* Toggles */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-slate-700">Options</Label>
-              <div className="flex flex-wrap gap-2">
-                {([
-                  { key: "includeSubdomains", label: "Include subdomains", value: includeSubdomains, set: setIncludeSubdomains },
-                  { key: "onlyMainContent", label: "Main content only", value: onlyMainContent, set: setOnlyMainContent },
-                  { key: "includeImages", label: "Include images", value: includeImages, set: setIncludeImages },
-                  { key: "includeTables", label: "Include tables", value: includeTables, set: setIncludeTables },
-                ] as const).map(({ key, label, value, set }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => set(!value)}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                      value
-                        ? "border-slate-950 bg-slate-950 text-white"
-                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                    }`}
-                  >
-                    {value && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Path filters */}
-            <TextInput
-              label="Include paths (comma-separated)"
-              placeholder="/docs/*, /blog/*"
-              value={includePathsInput}
-              onChange={(e) => setIncludePathsInput(e.target.value)}
-            />
-            <TextInput
-              label="Exclude paths (comma-separated)"
-              placeholder="/privacy, /terms"
-              value={excludePathsInput}
-              onChange={(e) => setExcludePathsInput(e.target.value)}
-            />
-
-            {/* Wait for */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-slate-700">Wait for (ms)</Label>
-              <input
-                type="number"
-                min={0}
-                step={100}
-                value={waitFor}
-                onChange={(e) => setWaitFor(Number(e.target.value))}
-                placeholder="0"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
-              />
-              <p className="text-[11px] text-slate-400">Milliseconds to wait for JS rendering before scraping</p>
-            </div>
-          </div>
-        )}
-
-        {/* Submit */}
-        <Button
-          className="w-full"
-          type="submit"
-          disabled={
-            uploading ||
-            (source === "file" && mode === "upload" && !selectedFile) ||
-            ((source === "website" || (source === "file" && mode === "url")) && !urlInput.trim())
-          }
-        >
-          {uploading ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-              {STEP_LABEL[step]}
-            </span>
-          ) : (
-            STEP_LABEL.idle
-          )}
-        </Button>
-
-        {message && (
-          <div
-            className={`rounded-xl border p-3 text-sm ${
-              message.type === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-red-200 bg-red-50 text-red-700"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
+        </div>
       </form>
     </div>
   );
