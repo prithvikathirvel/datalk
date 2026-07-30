@@ -39,11 +39,11 @@ export function LoginForm({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {errorMessage ? (
         <div
           role="alert"
-          className="dk-animate-fade-up flex gap-2.5 rounded-2xl bg-red-50 px-4 py-3 text-red-700 text-sm ring-1 ring-red-200"
+          className="dk-animate-fade-up flex gap-2.5 rounded-lg border border-red-200 border-l-2 border-l-red-500 bg-red-50/70 px-4 py-3 text-[13px] text-red-700"
         >
           <svg
             className="mt-0.5 h-4 w-4 shrink-0"
@@ -74,7 +74,7 @@ export function LoginForm({
         type="button"
         onClick={handleGoogleSignIn}
         disabled={loading}
-        className="group flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-3.5 font-medium text-slate-800 text-sm shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+        className="group flex w-full cursor-pointer items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-3 font-medium text-[0.9375rem] text-slate-900 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
       >
         {loading ? (
           <>
@@ -112,9 +112,9 @@ export function LoginForm({
         )}
       </button>
 
-      <p className="flex items-center justify-center gap-1.5 text-slate-400 text-xs">
+      <p className="flex items-center gap-2 text-[13px] text-slate-400">
         <svg
-          className="h-3.5 w-3.5"
+          className="h-3.5 w-3.5 shrink-0"
           viewBox="0 0 16 16"
           fill="none"
           aria-hidden="true"
@@ -135,16 +135,22 @@ export function LoginForm({
             strokeWidth="1.3"
           />
         </svg>
-        Secure sign-in — we never see your Google password
+        Secure sign-in — we never see your Google password.
       </p>
 
-      <p className="text-center text-[11px] text-slate-400 leading-5">
+      <p className="text-[13px] text-slate-400 leading-6">
         By continuing, you agree to our{" "}
-        <Link href="/terms" className="underline underline-offset-2 hover:text-slate-700">
+        <Link
+          href="/terms"
+          className="underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-700"
+        >
           Terms of Service
         </Link>{" "}
         and{" "}
-        <Link href="/privacy" className="underline underline-offset-2 hover:text-slate-700">
+        <Link
+          href="/privacy"
+          className="underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-700"
+        >
           Privacy Policy
         </Link>
         .
@@ -156,7 +162,7 @@ export function LoginForm({
 function GoogleIcon() {
   return (
     <svg
-      className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110"
+      className="h-[18px] w-[18px] shrink-0"
       viewBox="0 0 24 24"
       aria-hidden="true"
     >
