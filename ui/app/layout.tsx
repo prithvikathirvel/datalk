@@ -11,7 +11,7 @@ const geistMono = Geist_Mono({
 });
 
 const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Datalk";
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://datalk.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://datalk.co.in";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://datalk.co.in";
+
 export const metadata: Metadata = {
   title: "Terms of Service · Datalk",
   description: "The terms that govern your use of Datalk.",
+  alternates: {
+    canonical: `${siteUrl}/terms`,
+  },
 };
 
 export default function TermsPage() {
