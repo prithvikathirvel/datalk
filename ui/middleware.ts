@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const authCookieName = "rag_saas_token";
 const authRoutes = ["/login", "/signup"];
-const publicRoutes = ["/", "/login", "/signup", "/widget"];
+const publicRoutes = ["/", "/login", "/signup", "/widget", "/privacy", "/terms"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

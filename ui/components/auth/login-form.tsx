@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 const errorMessages: Record<string, string> = {
@@ -135,6 +136,18 @@ export function LoginForm({
           />
         </svg>
         Secure sign-in — we never see your Google password
+      </p>
+
+      <p className="text-center text-[11px] text-slate-400 leading-5">
+        By continuing, you agree to our{" "}
+        <Link href="/terms" className="underline underline-offset-2 hover:text-slate-700">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-slate-700">
+          Privacy Policy
+        </Link>
+        .
       </p>
     </div>
   );

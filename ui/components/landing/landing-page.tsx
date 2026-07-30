@@ -138,8 +138,14 @@ function HeroSection() {
             </span>
             Public beta — early access now open
           </span> */}
+          {/* <p
+            className="dk-animate-fade-up mt-6 text-sm font-semibold text-slate-400 uppercase tracking-widest"
+            style={{ animationDelay: "40ms" }}
+          >
+            Datalk — AI-powered chatbot builder
+          </p> */}
           <h1
-            className="dk-animate-fade-up mt-6 max-w-3xl font-semibold text-5xl text-slate-950 tracking-tight md:text-6xl lg:text-6xl"
+            className="dk-animate-fade-up mt-3 max-w-3xl font-semibold text-5xl text-slate-950 tracking-tight md:text-6xl lg:text-6xl"
             style={{ animationDelay: "80ms" }}
           >
             Turn your knowledge into AI that answers customers.
@@ -148,9 +154,7 @@ function HeroSection() {
             className="dk-animate-fade-up mt-6 max-w-2xl text-lg text-slate-500 leading-8"
             style={{ animationDelay: "160ms" }}
           >
-            Add PDFs, website URLs, or help pages — whatever knowledge you already
-            have. Datalk reads it, indexes it, and gives you a chatbot ready to
-            paste on your website today. Every answer comes from your own sources.
+            Datalk is a platform that turns your existing documents, PDFs, and website pages into an AI chatbot you can embed on your website — no coding needed.
           </p>
           <div
             className="dk-animate-fade-up mt-8 flex flex-wrap gap-3"

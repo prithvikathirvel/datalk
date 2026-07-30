@@ -58,23 +58,7 @@ export function AuthCard({
 
         <div className="mt-7">{children}</div>
 
-        <p className="mt-6 text-center text-slate-400 text-xs leading-5">
-          By continuing you agree to our{" "}
-          <Link
-            href="/"
-            className="text-slate-600 underline underline-offset-2 transition-colors hover:text-slate-950"
-          >
-            Terms
-          </Link>{" "}
-          and{" "}
-          <Link
-            href="/"
-            className="text-slate-600 underline underline-offset-2 transition-colors hover:text-slate-950"
-          >
-            Privacy Policy
-          </Link>
-          .
-        </p>
+
       </div>
 
       <p className="mt-6 text-center text-slate-500 text-sm">
