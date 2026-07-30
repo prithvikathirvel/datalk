@@ -44,43 +44,20 @@ export interface AnalyticsData {
   satisfaction: SatisfactionBreakdown;
 }
 
+// Empty defaults shown while the real analytics API is loading.
 export const mockAnalyticsData: AnalyticsData = {
-  totalConversations: 284,
-  totalMessages: 1_847,
-  avgMessagesPerConversation: 6.5,
-  avgResponseTimeMs: 820,
-  unansweredRate: 0.12,
-  topQuestions: [
-    { id: "q1", question: "What are the pricing plans?", count: 48, lastAsked: "2026-07-07T14:23:00Z" },
-    { id: "q2", question: "How do I cancel my subscription?", count: 37, lastAsked: "2026-07-08T09:11:00Z" },
-    { id: "q3", question: "What is the refund policy?", count: 31, lastAsked: "2026-07-07T18:05:00Z" },
-    { id: "q4", question: "How do I integrate with Slack?", count: 27, lastAsked: "2026-07-06T12:44:00Z" },
-    { id: "q5", question: "Is there an API available?", count: 22, lastAsked: "2026-07-08T07:30:00Z" },
-    { id: "q6", question: "How do I export my data?", count: 19, lastAsked: "2026-07-05T16:20:00Z" },
-    { id: "q7", question: "Do you support SSO?", count: 15, lastAsked: "2026-07-04T10:00:00Z" },
-    { id: "q8", question: "What file formats are supported?", count: 14, lastAsked: "2026-07-03T08:15:00Z" },
-  ],
-  unansweredQuestions: [
-    { id: "u1", question: "Can I white-label the chatbot?", askedAt: "2026-07-08T08:45:00Z", botName: "Docs Assistant" },
-    { id: "u2", question: "Do you have HIPAA compliance docs?", askedAt: "2026-07-07T21:15:00Z", botName: "Support Bot" },
-    { id: "u3", question: "What is your SLA for enterprise customers?", askedAt: "2026-07-07T17:30:00Z", botName: "Docs Assistant" },
-    { id: "u4", question: "How do I configure webhooks?", askedAt: "2026-07-07T14:00:00Z", botName: "Support Bot" },
-    { id: "u5", question: "Can I import data from Notion?", askedAt: "2026-07-06T11:20:00Z", botName: "Docs Assistant" },
-  ],
-  dailyConversations: [
-    { date: "2026-07-01", conversations: 28, messages: 182 },
-    { date: "2026-07-02", conversations: 34, messages: 221 },
-    { date: "2026-07-03", conversations: 22, messages: 143 },
-    { date: "2026-07-04", conversations: 18, messages: 117 },
-    { date: "2026-07-05", conversations: 31, messages: 201 },
-    { date: "2026-07-06", conversations: 45, messages: 293 },
-    { date: "2026-07-07", conversations: 52, messages: 338 },
-    { date: "2026-07-08", conversations: 54, messages: 352 },
-  ],
+  totalConversations: 0,
+  totalMessages: 0,
+  avgMessagesPerConversation: 0,
+  avgResponseTimeMs: 0,
+  unansweredRate: 0,
+  topQuestions: [],
+  unansweredQuestions: [],
+  dailyConversations: [],
   satisfaction: {
-    thumbsUp: 198,
-    thumbsDown: 34,
-    noFeedback: 52,
+    thumbsUp: 0,
+    thumbsDown: 0,
+    noFeedback: 0,
   },
 };
 
