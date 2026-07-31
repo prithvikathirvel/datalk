@@ -8,16 +8,19 @@ interface WidgetMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  sourceDocuments?: string[];
 }
 
 function makeMessage(
   role: WidgetMessage["role"],
   content: string,
+  sourceDocuments?: string[],
 ): WidgetMessage {
   return {
     id: `${role}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     role,
     content,
+    sourceDocuments,
   };
 }
 
@@ -103,7 +106,7 @@ export function EmbedWidget({
     );
     setMessages((current) => [
       ...current,
-      makeMessage("assistant", data.final_response),
+      makeMessage("assistant", data.final_response, data.source_documents),
     ]);
   }
 
@@ -183,7 +186,7 @@ export function EmbedWidget({
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}
             >
               <div
                 className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-6 ${
@@ -199,6 +202,45 @@ export function EmbedWidget({
               >
                 {message.content}
               </div>
+
+              {/* Source documents for assistant messages */}
+              {message.role === "assistant" &&
+                message.sourceDocuments &&
+                message.sourceDocuments.length > 0 && (
+                  <div className="mt-2 flex flex-wrap items-center gap-1 max-w-[85%]">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                      Sources
+                    </span>
+                    {message.sourceDocuments.map((url, idx) => {
+                      const filename = url.split("/").pop()?.split("?")[0];
+                      const displayName = filename
+                        ? decodeURIComponent(filename).slice(0, 24) +
+                          (filename.length > 24 ? "…" : "")
+                        : `Source ${idx + 1}`;
+                      return (
+                        <a
+                          key={`src-${message.id}-${idx}`}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-0.5 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
+                          title={url}
+                        >
+                          <svg
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            className="h-2.5 w-2.5 shrink-0 text-slate-400"
+                            aria-hidden="true"
+                          >
+                            <path d="M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9c-.086 0-.17.01-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z" />
+                            <path d="M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4.02 4.02 0 0 1-.82 1H12a3 3 0 1 0 0-6H9z" />
+                          </svg>
+                          {displayName}
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
             </div>
           ))}
           {loading ? (

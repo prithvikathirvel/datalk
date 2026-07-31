@@ -9,6 +9,8 @@ export interface LocalChatMessage {
   role: "user" | "assistant";
   content: string;
   createdAt: string;
+  sourceDocuments?: string[];
+  usage?: ConversationUsage;
 }
 
 interface ChatState {
