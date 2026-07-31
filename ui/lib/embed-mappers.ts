@@ -40,6 +40,10 @@ export interface BackendEmbedConfig {
   isActive?: boolean;
   model?: string | null;
   sourceDocumentIds?: string[];
+  widgetWidth?: number | null;
+  widgetHeight?: number | null;
+  inputPlaceholder?: string | null;
+  launcherOffset?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -81,6 +85,14 @@ function optional(value: string | null | undefined) {
   return value ?? undefined;
 }
 
+/** Clamps a widget dimension coming from the backend into a safe UI range. */
+function optionalDimension(value: number | null | undefined, fallback: number) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    return fallback;
+  }
+  return Math.round(value);
+}
+
 export function toEmbedConfig(input: BackendEmbedConfig): EmbedConfig {
   return {
     id: input.id,
@@ -98,7 +110,8 @@ export function toEmbedConfig(input: BackendEmbedConfig): EmbedConfig {
     launcherStyle: input.launcherStyle ?? undefined,
     avatarInitials: input.avatarInitials,
     borderRadiusStyle:
-      (input.borderRadiusStyle as EmbedConfig["borderRadiusStyle"]) ?? undefined,
+      (input.borderRadiusStyle as EmbedConfig["borderRadiusStyle"]) ??
+      undefined,
     widgetShadow:
       (input.widgetShadow as EmbedConfig["widgetShadow"]) ?? undefined,
     fontFamily: optional(input.fontFamily),
@@ -108,6 +121,10 @@ export function toEmbedConfig(input: BackendEmbedConfig): EmbedConfig {
     isActive: input.isActive ?? true,
     model: optional(input.model),
     sourceDocumentIds: input.sourceDocumentIds ?? [],
+    widgetWidth: optionalDimension(input.widgetWidth, 400),
+    widgetHeight: optionalDimension(input.widgetHeight, 640),
+    inputPlaceholder: optional(input.inputPlaceholder),
+    launcherOffset: optionalDimension(input.launcherOffset, 24),
     createdAt: input.createdAt ?? "",
     updatedAt: input.updatedAt ?? "",
   };
@@ -199,6 +216,17 @@ export interface EmbedConfigFormInput {
   collectVisitorEmail?: boolean;
   isActive?: boolean;
   model?: string;
+  widgetWidth?: number;
+  widgetHeight?: number;
+  inputPlaceholder?: string;
+  launcherOffset?: number;
+}
+
+/** Parses a numeric form field; returns undefined for anything unusable. */
+function optionalNumber(value: unknown, min: number, max: number) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return undefined;
+  return Math.min(max, Math.max(min, Math.round(num)));
 }
 
 /**
@@ -240,5 +268,12 @@ export function toBackendConfigPayload(
     collect_visitor_email: input.collectVisitorEmail ?? false,
     is_active: input.isActive ?? true,
     model: input.model?.trim() || null,
+    // Optional widget dimensions — harmless extras for backends that do not
+    // persist them yet (Pydantic ignores unknown fields by default), and the
+    // widget falls back to sane defaults when they come back empty.
+    widget_width: optionalNumber(input.widgetWidth, 280, 560) ?? null,
+    widget_height: optionalNumber(input.widgetHeight, 400, 860) ?? null,
+    input_placeholder: input.inputPlaceholder?.trim().slice(0, 80) || null,
+    launcher_offset: optionalNumber(input.launcherOffset, 0, 120) ?? null,
   };
 }

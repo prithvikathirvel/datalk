@@ -55,6 +55,10 @@ const defaults = {
   botDescription: "Answers from your documents",
   contextPrompt: "",
   showPoweredBy: true,
+  widgetWidth: 400,
+  widgetHeight: 640,
+  inputPlaceholder: "Ask a question...",
+  launcherOffset: 24,
 };
 
 async function readError(response: Response) {
@@ -62,6 +66,14 @@ async function readError(response: Response) {
     detail?: string;
   } | null;
   return data?.detail ?? "Request failed.";
+}
+
+/** Blank form fields fall back; entered numbers (including 0) pass through. */
+function numField(formData: FormData, name: string, fallback: number): number {
+  const raw = String(formData.get(name) ?? "").trim();
+  if (!raw) return fallback;
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : fallback;
 }
 
 type EditorTab =
@@ -249,7 +261,9 @@ export function EmbedBuilder() {
 
   async function loadConfigs(nextSelectedId?: string | null) {
     setError(null);
-    const configsResponse = await fetch("/api/embed/configs", { cache: "no-store" });
+    const configsResponse = await fetch("/api/embed/configs", {
+      cache: "no-store",
+    });
 
     if (!configsResponse.ok) {
       setError(await readError(configsResponse));
@@ -266,7 +280,9 @@ export function EmbedBuilder() {
   }
 
   async function loadFeedback() {
-    const feedbackResponse = await fetch("/api/embed/feedback", { cache: "no-store" });
+    const feedbackResponse = await fetch("/api/embed/feedback", {
+      cache: "no-store",
+    });
     if (feedbackResponse.ok) {
       const feedbackData = (await feedbackResponse.json()) as {
         feedback: EmbedFeedback[];
@@ -341,6 +357,18 @@ export function EmbedBuilder() {
         fontFamily: String(formData.get("fontFamily") ?? defaults.fontFamily),
         showPoweredBy: formData.get("showPoweredBy") === "on",
         contextPrompt: String(formData.get("contextPrompt") ?? ""),
+        // Numeric fields: blank → default; valid numbers (incl. 0) pass through
+        // and are clamped server-side in toBackendConfigPayload.
+        widgetWidth: numField(formData, "widgetWidth", defaults.widgetWidth),
+        widgetHeight: numField(formData, "widgetHeight", defaults.widgetHeight),
+        inputPlaceholder:
+          String(formData.get("inputPlaceholder") ?? "").trim() ||
+          defaults.inputPlaceholder,
+        launcherOffset: numField(
+          formData,
+          "launcherOffset",
+          defaults.launcherOffset,
+        ),
       }),
     });
 
@@ -437,16 +465,16 @@ export function EmbedBuilder() {
               Refresh
             </Button>
             <Button onClick={() => openStudio(null)} size="sm">
-            <svg
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="mr-1.5 h-3.5 w-3.5"
-              aria-hidden="true"
-            >
-              <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
-            </svg>
-            New chatbot
-          </Button>
+              <svg
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="mr-1.5 h-3.5 w-3.5"
+                aria-hidden="true"
+              >
+                <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+              </svg>
+              New chatbot
+            </Button>
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
@@ -807,6 +835,74 @@ export function EmbedBuilder() {
                         />
                       </Field>
                     </div>
+
+                    {/* Dimensions & placement */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Dimensions &amp; placement
+                      </p>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <Field label="Widget width (px)" id="widgetWidth">
+                          <Input
+                            id="widgetWidth"
+                            name="widgetWidth"
+                            type="number"
+                            min={280}
+                            max={560}
+                            step={10}
+                            defaultValue={
+                              selected?.widgetWidth ?? defaults.widgetWidth
+                            }
+                          />
+                        </Field>
+                        <Field label="Widget height (px)" id="widgetHeight">
+                          <Input
+                            id="widgetHeight"
+                            name="widgetHeight"
+                            type="number"
+                            min={400}
+                            max={860}
+                            step={10}
+                            defaultValue={
+                              selected?.widgetHeight ?? defaults.widgetHeight
+                            }
+                          />
+                        </Field>
+                        <Field
+                          label="Distance from screen edge (px)"
+                          id="launcherOffset"
+                        >
+                          <Input
+                            id="launcherOffset"
+                            name="launcherOffset"
+                            type="number"
+                            min={0}
+                            max={120}
+                            step={2}
+                            defaultValue={
+                              selected?.launcherOffset ??
+                              defaults.launcherOffset
+                            }
+                          />
+                        </Field>
+                        <Field label="Input placeholder" id="inputPlaceholder">
+                          <Input
+                            id="inputPlaceholder"
+                            name="inputPlaceholder"
+                            maxLength={80}
+                            defaultValue={
+                              selected?.inputPlaceholder ??
+                              defaults.inputPlaceholder
+                            }
+                          />
+                        </Field>
+                      </div>
+                      <p className="mt-2.5 text-[11px] leading-relaxed text-slate-400">
+                        Applies to the floating widget on desktop. On phones
+                        under 520px the chat always opens full-screen for
+                        readability.
+                      </p>
+                    </div>
                     <div className="flex flex-wrap gap-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                       <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
                         <input
@@ -878,8 +974,9 @@ export function EmbedBuilder() {
                         }
                       />
                       <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-                        Private business/customer context and behavior instructions for the chatbot.
-                        This guides the bot&apos;s personality, scope, and how it handles questions.
+                        Private business/customer context and behavior
+                        instructions for the chatbot. This guides the bot&apos;s
+                        personality, scope, and how it handles questions.
                       </p>
                     </div>
                   </div>
