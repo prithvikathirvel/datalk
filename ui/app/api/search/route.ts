@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 
   return proxyJson<SearchResponse>(
     joinUrl(
-      backendUrls.ingestion,
+      backendUrls.chat,
       `/search/search?${backendParams.toString()}`,
     ),
     {

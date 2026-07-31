@@ -1230,13 +1230,30 @@ function SearchCard() {
     const formData = new FormData(event.currentTarget);
     const query = String(formData.get("query") ?? "").trim();
     const topK = String(formData.get("topK") ?? "5");
+    const userId = String(formData.get("userId") ?? "").trim();
+    const documentIdsRaw = String(formData.get("documentIds") ?? "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+
     if (!query) return;
 
     setSearching(true);
     setError(null);
     setResponse(null);
+
+    const params = new URLSearchParams();
+    params.set("query", query);
+    params.set("top_k", topK);
+    if (userId) {
+      params.set("user_id", userId);
+    }
+    for (const docId of documentIdsRaw) {
+      params.append("document_ids", docId);
+    }
+
     const searchResponse = await fetch(
-      `/api/search?query=${encodeURIComponent(query)}&top_k=${encodeURIComponent(topK)}`,
+      `/api/search?${params.toString()}`,
       { cache: "no-store" },
     );
     setSearching(false);
@@ -1256,34 +1273,51 @@ function SearchCard() {
         </p>
       </div>
       <div className="p-5">
-        <form
-          className="grid gap-3 sm:grid-cols-[1fr_120px_auto] sm:items-end"
-          onSubmit={onSubmit}
-        >
-          <TextInput
-            id="query"
-            name="query"
-            label="Question"
-            placeholder="What does the contract say about termination?"
-            icon={
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-            }
-          />
-          <TextInput
-            id="topK"
-            name="topK"
-            label="Top K"
-            type="number"
-            min="1"
-            max="20"
-            defaultValue="5"
-          />
-          <Button type="submit" disabled={searching} className="sm:mb-0">
-            {searching ? "Searching..." : "Search"}
-          </Button>
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+            <TextInput
+              id="query"
+              name="query"
+              label="Question"
+              placeholder="What does the contract say about termination?"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              }
+            />
+            <TextInput
+              id="topK"
+              name="topK"
+              label="Top K"
+              type="number"
+              min="1"
+              max="20"
+              defaultValue="5"
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <TextInput
+              id="userId"
+              name="userId"
+              label="User ID (optional)"
+              placeholder="e.g. 8193fd1a-d0b1-7025-e0b6-56b6a26e1519"
+            />
+            <TextInput
+              id="documentIds"
+              name="documentIds"
+              label="Document IDs (optional, comma-separated)"
+              placeholder="e.g. b9e7819d-a5d1-4b3b-ba86-cd9ce233633e"
+            />
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <Button type="submit" disabled={searching}>
+              {searching ? "Searching..." : "Search"}
+            </Button>
+          </div>
         </form>
 
         {error && (
@@ -1303,22 +1337,39 @@ function SearchCard() {
               </div>
             ) : (
               response.results.map((result) => (
-                <div key={result.id} className="rounded-xl border border-slate-200 p-4">
+                <div key={result.id} className="rounded-xl border border-slate-200 p-4 hover:bg-slate-50 transition-colors">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge>Score {result.score.toFixed(2)}</Badge>
+                    <Badge variant="success" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                      Score {result.score.toFixed(4)}
+                    </Badge>
                     {result.metadata.title && (
                       <Badge variant="outline">{String(result.metadata.title)}</Badge>
                     )}
                     {result.metadata.page_number && (
                       <Badge variant="outline">Page {String(result.metadata.page_number)}</Badge>
                     )}
+                    {!!result.metadata.chunk_content_type && (
+                      <Badge variant="outline">{String(result.metadata.chunk_content_type)}</Badge>
+                    )}
                   </div>
-                  <div className="mt-3 grid gap-2 text-slate-500 text-sm sm:grid-cols-2">
-                    <p className="truncate">
-                      Document: {String(result.metadata.document_id ?? "Unknown")}
+                  <div className="mt-3 grid gap-2 text-slate-500 text-xs sm:grid-cols-3">
+                    <p className="truncate" title={String(result.metadata.document_id ?? "Unknown")}>
+                      <span className="font-semibold text-slate-700">Document:</span>{" "}
+                      {String(result.metadata.document_id ?? "Unknown")}
                     </p>
-                    <p>Chunk: {String(result.metadata.chunk_index ?? result.id)}</p>
+                    <p className="truncate" title={String(result.metadata.chunk_index ?? result.id)}>
+                      <span className="font-semibold text-slate-700">Chunk index:</span>{" "}
+                      {String(result.metadata.chunk_index ?? "—")}
+                    </p>
+                    <p className="truncate" title={result.id}>
+                      <span className="font-semibold text-slate-700">ID:</span> {result.id}
+                    </p>
                   </div>
+                  {!!result.metadata.text && (
+                    <div className="mt-3 rounded-lg bg-slate-50 p-3 text-slate-700 text-xs font-mono max-h-60 overflow-y-auto whitespace-pre-wrap border border-slate-150 leading-relaxed">
+                      {String(result.metadata.text)}
+                    </div>
+                  )}
                 </div>
               ))
             )}

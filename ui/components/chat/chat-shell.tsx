@@ -61,6 +61,12 @@ export function ChatShell({
     let cancelled = false;
 
     async function loadConversation(nextThreadId: string) {
+      const currentState = useChatStore.getState();
+      if (currentState.threadId === nextThreadId && currentState.messages.length > 0) {
+        setLoadingHistory(false);
+        return;
+      }
+
       setLoadingHistory(true);
       setError(null);
       try {
@@ -290,35 +296,32 @@ export function ChatShell({
                     {message.sourceDocuments &&
                       message.sourceDocuments.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">
+                          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mr-1">
                             Sources
                           </span>
                           {message.sourceDocuments.map((url, idx) => {
-                            const filename = url
-                              .split("/")
-                              .pop()
-                              ?.split("?")[0];
-                            const displayName = filename
-                              ? decodeURIComponent(filename).slice(0, 30) +
-                                (filename.length > 30 ? "…" : "")
-                              : `Source ${idx + 1}`;
+                            const displayName = `Source ${idx + 1}`;
                             return (
                               <a
                                 key={`${message.id}-src-${idx}`}
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
                                 title={url}
                               >
                                 <svg
-                                  viewBox="0 0 16 16"
-                                  fill="currentColor"
-                                  className="h-3 w-3 shrink-0 text-slate-400"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="h-3.5 w-3.5 shrink-0 text-slate-500"
                                   aria-hidden="true"
                                 >
-                                  <path d="M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9c-.086 0-.17.01-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z" />
-                                  <path d="M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4.02 4.02 0 0 1-.82 1H12a3 3 0 1 0 0-6H9z" />
+                                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                                  <path d="M14 2v4a2 2 0 0 0 2 2h4" />
                                 </svg>
                                 {displayName}
                               </a>
@@ -346,31 +349,33 @@ export function ChatShell({
                         </span>
                       </div>
                     )}
-
-                    {/* Show overall conversation usage at the end for the last message */}
-                    {message === messages[messages.length - 1] &&
-                      !message.usage &&
-                      usage && (
-                        <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                          <svg
-                            viewBox="0 0 16 16"
-                            fill="currentColor"
-                            className="h-3 w-3 shrink-0"
-                            aria-hidden="true"
-                          >
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
-                          </svg>
-                          <span>
-                            Conversation total:{" "}
-                            {usage.total_tokens.toLocaleString()} tokens
-                          </span>
-                        </div>
-                      )}
                   </div>
                 )}
               </div>
             ))}
+
+            {/* Overall Token Usage Display at the end */}
+            {!loading && usage && (
+              <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-250 px-4 py-3 text-xs text-slate-500 max-w-fit ml-auto shadow-sm">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4 shrink-0 text-slate-400"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span>
+                  <span className="font-semibold text-slate-700">Overall Usage:</span>{" "}
+                  <span className="font-bold text-slate-900">{usage.total_tokens.toLocaleString()}</span> tokens (Prompt: {usage.prompt_tokens.toLocaleString()}, Completion: {usage.completion_tokens.toLocaleString()})
+                </span>
+              </div>
+            )}
 
             {loading && (
               <div className="flex gap-3">

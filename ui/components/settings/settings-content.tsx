@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -69,7 +70,7 @@ export function SettingsContent({
           >
             <path
               fillRule="evenodd"
-              d="M6 12.5A1.5 1.5 0 0 1 7.5 11h4a1.5 1.5 0 0 1 1.5 1.5V14a1 1 0 0 0 2 0v-1.5A3.5 3.5 0 0 0 11.5 9h-4A3.5 3.5 0 0 0 4 12.5V14a1 1 0 0 0 2 0v-1.5ZM8 1a.75.75 0 0 1 .75.75v5.69l.72-.72a.75.75 0 1 1 1.06 1.06l-2 2a.75.75 0 0 1-1.06 0l-2-2a.75.75 0 0 1 1.06-1.06l.72.72V1.75A.75.75 0 0 1 8 1Z"
+              d="M6 12.5A1.5 1.5 0 0 1 7.5 11h4a1.5 1.5 0 0 1 1.5 1.5V14a1 1 0 0 0 2 0v-1.5ZM8 1a.75.75 0 0 1 .75.75v5.69l.72-.72a.75.75 0 1 1 1.06 1.06l-2 2a.75.75 0 0 1-1.06 0l-2-2a.75.75 0 0 1 1.06-1.06l.72.72V1.75A.75.75 0 0 1 8 1Z"
               clipRule="evenodd"
             />
           </svg>
@@ -128,9 +129,9 @@ export function SettingsContent({
           {/* Chat Preferences */}
           <Card>
             <CardHeader>
-              <CardTitle>Chat preferences</CardTitle>
+              <CardTitle>Chat & Ingestion preferences</CardTitle>
               <CardDescription>
-                Configure how the chat assistant behaves for your account.
+                Configure how the chat assistant and document parser behave for your account.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -164,6 +165,38 @@ export function SettingsContent({
                   </p>
                 </div>
 
+                {/* Future Ingestion Preferences addition */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="chunkSize">Default Chunk Size (tokens)</Label>
+                    <Input
+                      id="chunkSize"
+                      name="chunkSize"
+                      type="number"
+                      min="100"
+                      max="2000"
+                      defaultValue="500"
+                    />
+                    <p className="text-[11px] text-slate-400">
+                      Target length for document segments. Larger chunks hold more context but cost more.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="chunkOverlap">Chunk Overlap (tokens)</Label>
+                    <Input
+                      id="chunkOverlap"
+                      name="chunkOverlap"
+                      type="number"
+                      min="0"
+                      max="500"
+                      defaultValue="50"
+                    />
+                    <p className="text-[11px] text-slate-400">
+                      Tokens shared between adjacent chunks. Prevents loss of context at boundaries.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="contextPrompt">Custom system prompt (optional)</Label>
                   <Textarea
@@ -182,6 +215,120 @@ export function SettingsContent({
                 <div className="flex items-center gap-3">
                   <Button type="submit" disabled={saving}>
                     {saving ? "Saving…" : "Save preferences"}
+                  </Button>
+                  {saved && (
+                    <span className="text-emerald-600 text-sm font-medium">
+                      ✓ Saved
+                    </span>
+                  )}
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* SaaS Subscription & Limits */}
+          <Card>
+            <CardHeader>
+              <CardTitle>SaaS Subscription & Plan Limits</CardTitle>
+              <CardDescription>
+                Monitor your active subscription limits, quotas, and monthly usage.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <div>
+                  <p className="font-semibold text-slate-950 text-sm">Active Plan: Pro Tier</p>
+                  <p className="text-xs text-slate-500">Renews on August 25, 2026. $49/month</p>
+                </div>
+                <Badge variant="success" className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span className="text-slate-600">Document Chunk Usage</span>
+                    <span className="text-slate-900">4,288 / 20,000 chunks (21.4%)</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div className="bg-slate-950 h-2 rounded-full" style={{ width: "21.4%" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span className="text-slate-600">Monthly Chat Message Requests</span>
+                    <span className="text-slate-900">1,820 / 10,000 queries (18.2%)</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div className="bg-slate-950 h-2 rounded-full" style={{ width: "18.2%" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span className="text-slate-600">S3 Raw Storage</span>
+                    <span className="text-slate-900">45.8 MB / 500 MB (9.16%)</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div className="bg-slate-950 h-2 rounded-full" style={{ width: "9.16%" }} />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notifications & Alerts */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Notifications & Alerts</CardTitle>
+              <CardDescription>
+                Configure how and when you receive emails, summaries, and gap detection alerts.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-4" onSubmit={savePreferences}>
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-slate-950"
+                    />
+                    <div>
+                      <p className="font-semibold text-slate-950 text-sm">Failed Ingestion Alerts</p>
+                      <p className="text-slate-500 text-xs">Notify me immediately by email if a document ingestion job fails.</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-slate-950"
+                    />
+                    <div>
+                      <p className="font-semibold text-slate-950 text-sm">Knowledge Gap & Feedback Summaries</p>
+                      <p className="text-slate-500 text-xs">Receive a daily digest of customer widget questions that could not be answered.</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-slate-950"
+                    />
+                    <div>
+                      <p className="font-semibold text-slate-950 text-sm">Weekly Usage Reports</p>
+                      <p className="text-slate-500 text-xs">A weekly statistics email outlining widget activity, most popular queries, and token counts.</p>
+                    </div>
+                  </label>
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center gap-3">
+                  <Button type="submit" disabled={saving}>
+                    {saving ? "Saving…" : "Save notification settings"}
                   </Button>
                   {saved && (
                     <span className="text-emerald-600 text-sm font-medium">
