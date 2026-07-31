@@ -91,9 +91,7 @@ function HeroSection() {
     <section className="relative z-10 pb-20 md:pb-15 p-5">
       <nav className="mb-10 flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-3">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-950 font-semibold text-white">
-            D
-          </div>
+          <img src="/favicon.svg" alt="Datalk" className="h-9 w-9 rounded-xl" />
           <span className="font-semibold text-slate-950">Datalk</span>
           <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 text-xs ring-1 ring-amber-200">
             Beta
@@ -214,8 +212,8 @@ function HeroProductCard() {
         <div className="overflow-hidden rounded-[1.5rem] border border-white bg-gradient-to-b from-slate-50 to-white shadow-[inset_0_2px_20px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between border-slate-200 border-b bg-white/80 px-5 py-4 backdrop-blur">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 font-semibold text-sm text-white">
-                D
+              <div className="relative h-10 w-10">
+                <img src="/favicon.svg" alt="Datalk" className="h-full w-full rounded-2xl" />
                 <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
               </div>
               <div>
@@ -243,9 +241,7 @@ function HeroProductCard() {
             </div>
 
             <div className="flex gap-3">
-              <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-950 font-semibold text-white text-xs">
-                D
-              </div>
+              <img src="/favicon.svg" alt="Datalk" className="mt-1 h-8 w-8 shrink-0 rounded-xl" />
               <div className="max-w-[85%] rounded-2xl rounded-tl-md border border-slate-200 bg-white px-4 py-3 shadow-sm">
                 <p className="text-slate-600 text-sm leading-6">
                   Yes — annual plans are refundable within{" "}
