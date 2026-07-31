@@ -103,9 +103,23 @@ export interface ChatRequest {
   thread_id?: string;
 }
 
+export interface ChatResponseMetadata {
+  conversation_id?: string;
+  is_answered?: boolean;
+  answer_status?: string;
+  retrieval_response_time_ms?: number;
+  usage?: ConversationUsage;
+  [key: string]: unknown;
+}
+
 export interface ChatResponse {
   thread_id: string;
   final_response: string;
+  answer?: string;
+  response_type?: string;
+  document_ids?: string[];
+  source_documents?: string[];
+  metadata?: ChatResponseMetadata;
 }
 
 export interface ConversationMessage {
@@ -136,6 +150,7 @@ export interface ConversationMessageMetadata {
   is_answered?: boolean;
   answer_status?: string;
   feedback?: number;
+  source_documents?: string[];
   [key: string]: unknown;
 }
 

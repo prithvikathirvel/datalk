@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatResponse } from "@template/contracts";
+import type { ChatResponse, ConversationUsage } from "@template/contracts";
 import { cn, Textarea } from "@template/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,12 +12,16 @@ import { type LocalChatMessage, useChatStore } from "@/stores/chat-store";
 function createMessage(
   role: LocalChatMessage["role"],
   content: string,
+  sourceDocuments?: string[],
+  usage?: ConversationUsage,
 ): LocalChatMessage {
   return {
     id: `${role}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     role,
     content,
     createdAt: new Date().toISOString(),
+    sourceDocuments,
+    usage,
   };
 }
 
@@ -36,6 +40,7 @@ export function ChatShell({
   const {
     threadId,
     messages,
+    usage,
     setThreadId,
     addMessage,
     setMessages,
@@ -119,13 +124,27 @@ export function ChatShell({
 
     const data = (await response.json()) as ChatResponse;
     setThreadId(data.thread_id);
-    addMessage(createMessage("assistant", data.final_response));
+    addMessage(
+      createMessage(
+        "assistant",
+        data.final_response,
+        data.source_documents,
+        data.metadata?.usage,
+      ),
+    );
 
-    // A fresh conversation gets its own URL so it can be revisited later.
+    // Update usage from response metadata
+    if (data.metadata?.usage) {
+      setUsage(data.metadata.usage);
+    }
+
+    // Use history.replaceState to avoid Next.js route change re-render
     if (!activeThreadId && data.thread_id) {
-      router.replace(`/chat/${encodeURIComponent(data.thread_id)}`, {
-        scroll: false,
-      });
+      window.history.replaceState(
+        null,
+        "",
+        `/chat/${encodeURIComponent(data.thread_id)}`,
+      );
     }
   }
 
@@ -238,25 +257,118 @@ export function ChatShell({
               <div
                 key={message.id}
                 className={cn(
-                  "flex gap-3",
-                  message.role === "user" ? "justify-end" : "justify-start",
+                  "flex flex-col gap-3",
+                  message.role === "user" ? "items-end" : "items-start",
                 )}
               >
-                {message.role === "assistant" && (
-                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-950 font-bold text-[10px] text-white">
-                    D
-                  </div>
-                )}
                 <div
                   className={cn(
-                    "max-w-[78%] whitespace-pre-wrap text-sm leading-7",
-                    message.role === "user"
-                      ? "rounded-2xl bg-slate-950 px-4 py-3 text-white"
-                      : "text-slate-700",
+                    "flex gap-3",
+                    message.role === "user" ? "justify-end" : "justify-start",
                   )}
                 >
-                  {message.content}
+                  {message.role === "assistant" && (
+                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-950 font-bold text-[10px] text-white">
+                      D
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "max-w-[78%] whitespace-pre-wrap text-sm leading-7",
+                      message.role === "user"
+                        ? "rounded-2xl bg-slate-950 px-4 py-3 text-white"
+                        : "text-slate-700",
+                    )}
+                  >
+                    {message.content}
+                  </div>
                 </div>
+
+                {/* Source documents + token usage for assistant messages */}
+                {message.role === "assistant" && (
+                  <div className="ml-9 space-y-2">
+                    {message.sourceDocuments &&
+                      message.sourceDocuments.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">
+                            Sources
+                          </span>
+                          {message.sourceDocuments.map((url, idx) => {
+                            const filename = url
+                              .split("/")
+                              .pop()
+                              ?.split("?")[0];
+                            const displayName = filename
+                              ? decodeURIComponent(filename).slice(0, 30) +
+                                (filename.length > 30 ? "…" : "")
+                              : `Source ${idx + 1}`;
+                            return (
+                              <a
+                                key={`${message.id}-src-${idx}`}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+                                title={url}
+                              >
+                                <svg
+                                  viewBox="0 0 16 16"
+                                  fill="currentColor"
+                                  className="h-3 w-3 shrink-0 text-slate-400"
+                                  aria-hidden="true"
+                                >
+                                  <path d="M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9c-.086 0-.17.01-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z" />
+                                  <path d="M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4.02 4.02 0 0 1-.82 1H12a3 3 0 1 0 0-6H9z" />
+                                </svg>
+                                {displayName}
+                              </a>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                    {message.usage && (
+                      <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                        <svg
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          className="h-3 w-3 shrink-0"
+                          aria-hidden="true"
+                        >
+                          <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                        </svg>
+                        <span>
+                          {message.usage.total_tokens.toLocaleString()} tokens
+                          (prompt:{" "}
+                          {message.usage.prompt_tokens.toLocaleString()},
+                          completion:{" "}
+                          {message.usage.completion_tokens.toLocaleString()})
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Show overall conversation usage at the end for the last message */}
+                    {message === messages[messages.length - 1] &&
+                      !message.usage &&
+                      usage && (
+                        <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                          <svg
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            className="h-3 w-3 shrink-0"
+                            aria-hidden="true"
+                          >
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                          </svg>
+                          <span>
+                            Conversation total:{" "}
+                            {usage.total_tokens.toLocaleString()} tokens
+                          </span>
+                        </div>
+                      )}
+                  </div>
+                )}
               </div>
             ))}
 

@@ -34,6 +34,8 @@ function toLocalMessage(
     role: turn.role === "assistant" ? "assistant" : "user",
     content: turn.content ?? "",
     createdAt: turn.created_at ?? fallbackDate,
+    sourceDocuments: turn.metadata?.source_documents,
+    usage: turn.usage,
   };
 }
 

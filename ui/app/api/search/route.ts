@@ -16,14 +16,25 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = url.searchParams.get("query");
   const topK = url.searchParams.get("top_k") ?? "5";
+  const userId = url.searchParams.get("user_id");
+  const documentIds = url.searchParams.getAll("document_ids");
+
   if (!query) {
     return NextResponse.json({ detail: "query is required." }, { status: 400 });
+  }
+
+  const backendParams = new URLSearchParams();
+  backendParams.set("query", query);
+  backendParams.set("top_k", topK);
+  if (userId) backendParams.set("user_id", userId);
+  for (const docId of documentIds) {
+    backendParams.append("document_ids", docId);
   }
 
   return proxyJson<SearchResponse>(
     joinUrl(
       backendUrls.ingestion,
-      `/search/search?query=${encodeURIComponent(query)}&top_k=${encodeURIComponent(topK)}`,
+      `/search/search?${backendParams.toString()}`,
     ),
     {
       method: "GET",

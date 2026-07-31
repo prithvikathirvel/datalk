@@ -55,6 +55,11 @@ export function CoverageLab() {
       .filter(Boolean)
       .slice(0, 25);
     const topK = String(formData.get("topK") ?? "5");
+    const userId = String(formData.get("userId") ?? "").trim();
+    const documentIdsRaw = String(formData.get("documentIds") ?? "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
 
     if (!questions.length) {
       return;
@@ -66,8 +71,18 @@ export function CoverageLab() {
 
     const nextResults: CoverageResult[] = [];
     for (const question of questions) {
+      const params = new URLSearchParams();
+      params.set("query", question);
+      params.set("top_k", topK);
+      if (userId) params.set("user_id", userId);
+      if (documentIdsRaw.length > 0) {
+        for (const docId of documentIdsRaw) {
+          params.append("document_ids", docId);
+        }
+      }
+
       const response = await fetch(
-        `/api/search?query=${encodeURIComponent(question)}&top_k=${encodeURIComponent(topK)}`,
+        `/api/search?${params.toString()}`,
         { cache: "no-store" },
       );
       if (!response.ok) {
@@ -142,6 +157,24 @@ How do I contact support?`}
                   min="1"
                   max="20"
                   defaultValue="5"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="userId">User ID (optional)</Label>
+                <Input
+                  id="userId"
+                  name="userId"
+                  placeholder="e.g. 8193fd1a-d0b1-7025-e0b6-56b6a26e1519"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="documentIds">
+                  Document IDs (optional, comma-separated)
+                </Label>
+                <Input
+                  id="documentIds"
+                  name="documentIds"
+                  placeholder="e.g. b9e7819d-a5d1-4b3b-ba86-cd9ce233633e"
                 />
               </div>
               <Button className="w-full" type="submit" disabled={running}>
