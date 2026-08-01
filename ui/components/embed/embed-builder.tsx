@@ -27,6 +27,12 @@ import { ApiKeysPanel } from "@/components/embed/api-keys-panel";
 import { SourcesPanel } from "@/components/embed/sources-panel";
 import { DataTable } from "@/components/ui/data-table";
 import { VercelTabs } from "@/components/ui/vercel-tabs";
+import { readApiError } from "@/lib/api-error";
+import {
+  buildInstallSnippet,
+  resolveAppearance,
+  saveAppearance,
+} from "@/lib/embed-appearance";
 import { formatDateTime } from "@/lib/format";
 
 const defaults = {
@@ -62,10 +68,7 @@ const defaults = {
 };
 
 async function readError(response: Response) {
-  const data = (await response.json().catch(() => null)) as {
-    detail?: string;
-  } | null;
-  return data?.detail ?? "Request failed.";
+  return readApiError(response);
 }
 
 /** Blank form fields fall back; entered numbers (including 0) pass through. */
@@ -384,6 +387,21 @@ export function EmbedBuilder() {
       key?: ApiKey;
     };
 
+    // Persist the UI-only appearance locally — the install snippet picks it
+    // up as data-* attributes (these values are never sent to the backend).
+    saveAppearance(data.config.id, {
+      widgetWidth: numField(formData, "widgetWidth", defaults.widgetWidth),
+      widgetHeight: numField(formData, "widgetHeight", defaults.widgetHeight),
+      launcherOffset: numField(
+        formData,
+        "launcherOffset",
+        defaults.launcherOffset,
+      ),
+      inputPlaceholder:
+        String(formData.get("inputPlaceholder") ?? "").trim() ||
+        defaults.inputPlaceholder,
+    });
+
     // A brand-new chatbot returns its raw API key exactly once.
     if (isCreating && data.apiKey) {
       setKeyModalKind("created");
@@ -391,7 +409,9 @@ export function EmbedBuilder() {
       setIssuedKey(data.key ?? null);
       setNotice("Chatbot created. Save your API key before closing.");
     } else {
-      setNotice("Saved. Preview and install code updated.");
+      setNotice(
+        "Saved. Copy the updated install code below — it now carries your widget size.",
+      );
     }
 
     await loadConfigs(data.config.id);
@@ -408,28 +428,35 @@ export function EmbedBuilder() {
       setError(await readError(response));
       return;
     }
-    setNotice("Embed chatbot deleted.");
+    setNotice("Chatbot deleted.");
     await loadConfigs(null);
     setStudioMode(false);
   }
 
   const selected = configs.find((c) => c.id === selectedId) ?? null;
+  // Size/placement/placeholder are UI-only and carried by the install
+  // snippet as data-* attributes (stored locally, never sent to the
+  // backend — sending unknown fields there makes strict APIs reject the
+  // whole save with HTTP 422).
+  const appearance = resolveAppearance(selected, selectedId);
   // The raw key is only in memory right after create/rotate. Once it is gone
   // the snippet shows a placeholder rather than a key we cannot recover.
   const snippetKey = revealedKey ?? "YOUR_API_KEY";
   const installCode = selected
-    ? `<script async src="${origin}/api/embed/script?apiKey=${snippetKey}"></script>`
+    ? buildInstallSnippet(origin, snippetKey, appearance)
     : "Save a chatbot to generate the install code.";
   const gaps = feedback.filter(
     (item) => !selectedId || item.botId === selectedId,
   );
-  const preview: EmbedConfig = selected ?? {
-    id: "preview",
-    userId: "preview",
-    createdAt: "",
-    updatedAt: "",
-    ...defaults,
-  };
+  const preview: EmbedConfig = selected
+    ? { ...selected, ...appearance }
+    : {
+        id: "preview",
+        userId: "preview",
+        createdAt: "",
+        updatedAt: "",
+        ...defaults,
+      };
 
   // ── List view ────────────────────────────────────────────────────────────────
   if (!studioMode) {
@@ -437,9 +464,10 @@ export function EmbedBuilder() {
       <div className="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-white lg:h-screen">
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
           <div>
-            <h1 className="font-semibold text-slate-950">Embed Studio</h1>
+            <h1 className="font-semibold text-slate-950">Chatbot Studio</h1>
             <p className="text-slate-400 text-xs">
-              Deploy chatbots powered by your Datalk knowledge base
+              Build, brand and deploy chatbots powered by your Datalk knowledge
+              base
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -620,7 +648,7 @@ export function EmbedBuilder() {
                 onClick={backToList}
                 className="text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap"
               >
-                Embed Studio
+                Chatbot Studio
               </button>
               <svg
                 viewBox="0 0 16 16"
@@ -850,9 +878,7 @@ export function EmbedBuilder() {
                             min={280}
                             max={560}
                             step={10}
-                            defaultValue={
-                              selected?.widgetWidth ?? defaults.widgetWidth
-                            }
+                            defaultValue={appearance.widgetWidth}
                           />
                         </Field>
                         <Field label="Widget height (px)" id="widgetHeight">
@@ -863,9 +889,7 @@ export function EmbedBuilder() {
                             min={400}
                             max={860}
                             step={10}
-                            defaultValue={
-                              selected?.widgetHeight ?? defaults.widgetHeight
-                            }
+                            defaultValue={appearance.widgetHeight}
                           />
                         </Field>
                         <Field
@@ -879,10 +903,7 @@ export function EmbedBuilder() {
                             min={0}
                             max={120}
                             step={2}
-                            defaultValue={
-                              selected?.launcherOffset ??
-                              defaults.launcherOffset
-                            }
+                            defaultValue={appearance.launcherOffset}
                           />
                         </Field>
                         <Field label="Input placeholder" id="inputPlaceholder">
@@ -890,17 +911,18 @@ export function EmbedBuilder() {
                             id="inputPlaceholder"
                             name="inputPlaceholder"
                             maxLength={80}
-                            defaultValue={
-                              selected?.inputPlaceholder ??
-                              defaults.inputPlaceholder
-                            }
+                            defaultValue={appearance.inputPlaceholder}
                           />
                         </Field>
                       </div>
                       <p className="mt-2.5 text-[11px] leading-relaxed text-slate-400">
-                        Applies to the floating widget on desktop. On phones
-                        under 520px the chat always opens full-screen for
-                        readability.
+                        Saved into the install code as{" "}
+                        <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px] text-slate-600">
+                          data-*
+                        </code>{" "}
+                        attributes — after saving, copy the updated snippet (or
+                        just edit the numbers directly on your website). On
+                        phones under 520px the chat always opens full-screen.
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -1351,7 +1373,12 @@ function InstallSection({
       <div>
         <p className="text-sm font-medium text-slate-950">Install code</p>
         <p className="mt-0.5 text-xs text-slate-400">
-          Paste before the closing &lt;/body&gt; tag.
+          Paste before the closing &lt;/body&gt; tag. The{" "}
+          <code className="rounded bg-slate-100 px-1 font-mono text-[10px]">
+            data-*
+          </code>{" "}
+          attributes control the widget size, offset and placeholder — edit them
+          anytime without redeploying.
         </p>
       </div>
       <pre className="overflow-x-auto rounded-xl bg-slate-950 px-4 py-3 text-xs leading-6 text-slate-100">

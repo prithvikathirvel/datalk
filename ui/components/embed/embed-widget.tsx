@@ -3,6 +3,7 @@
 import type { ChatResponse, EmbedConfig } from "@template/contracts";
 import { Button, Textarea } from "@template/ui";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { readApiError } from "@/lib/api-error";
 import { normalizeSourceDocuments } from "@/lib/source-documents";
 
 interface WidgetMessage {
@@ -26,10 +27,7 @@ function makeMessage(
 }
 
 async function readError(response: Response) {
-  const data = (await response.json().catch(() => null)) as {
-    detail?: string;
-  } | null;
-  return data?.detail ?? "Something went wrong.";
+  return readApiError(response, "Something went wrong.");
 }
 
 export function EmbedWidget({

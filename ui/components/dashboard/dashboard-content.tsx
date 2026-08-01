@@ -4,15 +4,22 @@ import type { DocumentFile, EmbedConfig } from "@template/contracts";
 import { Badge } from "@template/ui";
 import Link from "next/link";
 import { memo, useEffect, useState } from "react";
-import { formatBytes, formatDateTime } from "@/lib/format";
-import { dashboardQuickActions, mockAnalyticsData, setupSteps } from "@/lib/data";
+import { readApiError } from "@/lib/api-error";
 import type { AnalyticsData, DailyConversation } from "@/lib/data";
+import {
+  dashboardQuickActions,
+  mockAnalyticsData,
+  setupSteps,
+} from "@/lib/data";
+import { formatBytes, formatDateTime } from "@/lib/format";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const Skeleton = memo(function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded-xl bg-slate-100 ${className ?? ""}`} />
+    <div
+      className={`animate-pulse rounded-xl bg-slate-100 ${className ?? ""}`}
+    />
   );
 });
 
@@ -35,7 +42,9 @@ const StatCard = memo(function StatCard({
     <div
       className={`rounded-xl border p-5 ${accent ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}
     >
-      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</p>
+      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+        {label}
+      </p>
       {loading ? (
         <Skeleton className="mt-2 h-8 w-24" />
       ) : (
@@ -48,7 +57,11 @@ const StatCard = memo(function StatCard({
 
 // ─── Activity Bars ────────────────────────────────────────────────────────────
 
-const ActivityBars = memo(function ActivityBars({ data = [] }: { data?: DailyConversation[] }) {
+const ActivityBars = memo(function ActivityBars({
+  data = [],
+}: {
+  data?: DailyConversation[];
+}) {
   const max = Math.max(...data.map((d) => d.conversations), 0) || 1;
   return (
     <div className="flex h-20 items-end gap-1.5">
@@ -63,7 +76,9 @@ const ActivityBars = memo(function ActivityBars({ data = [] }: { data?: DailyCon
               style={{ height: `${(d.conversations / max) * 100}%` }}
             />
           </div>
-          <span className="mt-1 text-[9px] text-slate-400 leading-none">{d.date.slice(8)}</span>
+          <span className="mt-1 text-[9px] text-slate-400 leading-none">
+            {d.date.slice(8)}
+          </span>
           <div className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 rounded bg-slate-950 px-1.5 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-nowrap z-10">
             {d.conversations}
           </div>
@@ -127,7 +142,11 @@ function SetupGuide({
                 }`}
               >
                 {done ? (
-                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="h-3 w-3"
+                  >
                     <path d="M12.207 4.793a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L6.5 9.086l4.293-4.293a1 1 0 0 1 1.414 0z" />
                   </svg>
                 ) : (
@@ -135,12 +154,22 @@ function SetupGuide({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className={`text-sm font-medium ${done ? "text-slate-400 line-through" : "text-slate-950"}`}>
+                <p
+                  className={`text-sm font-medium ${done ? "text-slate-400 line-through" : "text-slate-950"}`}
+                >
                   {step.label}
                 </p>
-                <p className="text-xs text-slate-400 truncate">{step.description}</p>
+                <p className="text-xs text-slate-400 truncate">
+                  {step.description}
+                </p>
               </div>
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-4 w-4 shrink-0 text-slate-300">
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="h-4 w-4 shrink-0 text-slate-300"
+              >
                 <path d="M6 4l4 4-4 4" />
               </svg>
             </Link>
@@ -163,13 +192,23 @@ const QuickActions = memo(function QuickActions() {
           className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm lg:flex-row lg:items-center lg:gap-3"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-slate-700 h-[18px] w-[18px]">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-slate-700 h-[18px] w-[18px]"
+            >
               <path d={action.iconPath} />
             </svg>
           </div>
           <div>
             <p className="font-medium text-sm text-slate-950">{action.label}</p>
-            <p className="text-[11px] text-slate-400 leading-tight">{action.description}</p>
+            <p className="text-[11px] text-slate-400 leading-tight">
+              {action.description}
+            </p>
           </div>
         </Link>
       ))}
@@ -191,7 +230,9 @@ function RecentDocuments({
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="font-semibold text-slate-950">Recent documents</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Latest files in your knowledge base</p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Latest files in your knowledge base
+          </p>
         </div>
         <Link
           href="/documents"
@@ -209,7 +250,9 @@ function RecentDocuments({
       ) : files.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-200 py-8 text-center">
           <p className="text-sm text-slate-500 font-medium">No documents yet</p>
-          <p className="mt-1 text-xs text-slate-400">Upload files to power your chatbot</p>
+          <p className="mt-1 text-xs text-slate-400">
+            Upload files to power your chatbot
+          </p>
           <Link
             href="/documents"
             className="mt-3 inline-flex rounded-lg bg-slate-950 px-3 py-1.5 text-xs font-medium text-white"
@@ -225,14 +268,26 @@ function RecentDocuments({
               className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
             >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-500">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4 text-slate-500"
+                >
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-slate-950">{file.filename}</p>
-                <p className="text-xs text-slate-400">{formatDateTime(file.last_modified)}</p>
+                <p className="truncate text-sm font-medium text-slate-950">
+                  {file.filename}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {formatDateTime(file.last_modified)}
+                </p>
               </div>
               <Badge variant="secondary">{formatBytes(file.size)}</Badge>
             </div>
@@ -248,7 +303,9 @@ function RecentDocuments({
 export function DashboardContent() {
   const [files, setFiles] = useState<DocumentFile[]>([]);
   const [embeds, setEmbeds] = useState<EmbedConfig[]>([]);
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -262,8 +319,7 @@ export function DashboardContent() {
       setLoading(false);
 
       if (!filesRes.ok) {
-        const data = (await filesRes.json().catch(() => null)) as { detail?: string } | null;
-        setError(data?.detail ?? "Unable to reach the backend.");
+        setError(await readApiError(filesRes, "Unable to reach the backend."));
       } else {
         setFiles((await filesRes.json()) as DocumentFile[]);
       }
@@ -298,7 +354,15 @@ export function DashboardContent() {
             href="/chat"
             className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-3 py-1.5 text-sm text-white transition-colors hover:bg-slate-800"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             Start chatting
@@ -309,7 +373,6 @@ export function DashboardContent() {
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-5 p-6">
-
           {error && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 text-sm">
               {error}
@@ -340,9 +403,11 @@ export function DashboardContent() {
               value={`${Math.round(
                 (analytics.satisfaction.thumbsUp /
                   Math.max(
-                    analytics.satisfaction.thumbsUp + analytics.satisfaction.thumbsDown,
+                    analytics.satisfaction.thumbsUp +
+                      analytics.satisfaction.thumbsDown,
                     1,
-                  )) * 100,
+                  )) *
+                  100,
               )}%`}
               sub="Positive feedback"
               accent
@@ -354,8 +419,12 @@ export function DashboardContent() {
             <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="font-semibold text-slate-950">Conversation activity</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Daily conversations · last 8 days</p>
+                  <h2 className="font-semibold text-slate-950">
+                    Conversation activity
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Daily conversations · last 8 days
+                  </p>
                 </div>
                 <Link
                   href="/analytics"
@@ -368,7 +437,9 @@ export function DashboardContent() {
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-5 lg:w-72">
-              <h2 className="mb-3 font-semibold text-slate-950">Quick actions</h2>
+              <h2 className="mb-3 font-semibold text-slate-950">
+                Quick actions
+              </h2>
               <QuickActions />
             </div>
           </div>
@@ -378,11 +449,8 @@ export function DashboardContent() {
             <RecentDocuments files={files} loading={loading} />
             <SetupGuide filesCount={files.length} embedsCount={embeds.length} />
           </div>
-
         </div>
       </div>
     </div>
   );
 }
-
-

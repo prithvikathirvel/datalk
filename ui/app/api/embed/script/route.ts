@@ -3,19 +3,19 @@ import { widgetUrl } from "@/lib/backend";
 import { type BackendEmbedConfig, toEmbedConfig } from "@/lib/embed-mappers";
 
 /**
- * Cache story (the installment snippets load this on every customer page):
- * the script only changes when the chatbot's branding changes, so a short
- * browser TTL (5 min) plus a longer shared/CDN TTL (10 min) with a full day
+ * Cache story (the install snippets load this on every customer page): the
+ * script only changes when the chatbot's branding changes, so a short
+ * browser TTL (1 min) plus a short shared/CDN TTL (5 min) with a full day
  * of stale-while-revalidate keeps repeat loads instant while config edits
- * still propagate within minutes. Any CDN or Amplify/CloudFront edge in
- * front of the app honours these headers for free.
+ * still reach live sites within ~5 minutes. Any CDN or Amplify/CloudFront
+ * edge in front of the app honours these headers for free.
  */
 function scriptResponse(body: string, cache = false) {
   return new NextResponse(body, {
     headers: {
       "Content-Type": "application/javascript; charset=utf-8",
       "Cache-Control": cache
-        ? "public, max-age=300, s-maxage=600, stale-while-revalidate=86400"
+        ? "public, max-age=60, s-maxage=300, stale-while-revalidate=86400"
         : "no-store",
       "Access-Control-Allow-Origin": "*",
     },
@@ -197,22 +197,40 @@ var PANEL_RADIUS=${panelRadius};
 var PANEL_SHADOW=${panelShadow};
 var FONT_FAMILY=${fontFamily};
 
-/* Launcher/panel geometry derived from CONFIG (width/height/offset). */
-var PANEL_WIDTH=CONFIG.widgetWidth>0?CONFIG.widgetWidth:400;
-var PANEL_HEIGHT=CONFIG.widgetHeight>0?CONFIG.widgetHeight:640;
-var EDGE_OFFSET=CONFIG.launcherOffset>=0?CONFIG.launcherOffset:24;
-var PANEL_BOTTOM=EDGE_OFFSET+66;
+/* Find our own <script> tag — host of the data-* override attributes and
+   the origin the API calls go to. document.currentScript is null for async
+   scripts, so fall back to a selector. */
+function findScriptTag(){
+  if(document.currentScript)return document.currentScript;
+  return document.querySelector('script[src*="/api/embed/script"]');
+}
+var SCRIPT_TAG=findScriptTag();
+function dataAttr(name){
+  try{return SCRIPT_TAG?SCRIPT_TAG.getAttribute(name):null;}catch(e){return null;}
+}
 
 /* ── Resolve base URL from the script tag ─────────────────────────────── */
-var currentScript=document.currentScript;
 var BASE_URL="";
-if(currentScript&&currentScript.src){
-  try{BASE_URL=new URL(currentScript.src).origin;}catch(e){}
+if(SCRIPT_TAG&&SCRIPT_TAG.src){
+  try{BASE_URL=new URL(SCRIPT_TAG.src).origin;}catch(e){}
 }
-if(!BASE_URL){
-  var fallback=document.querySelector('script[src*="/api/embed/script"]');
-  if(fallback){try{BASE_URL=new URL(fallback.src).origin;}catch(e){}}
-}
+
+/* Widget geometry: script-tag data-* attributes (from the install snippet,
+   hand-editable on the host page) override the backend config, which in
+   turn overrides the built-in defaults. Values are clamped to sane bounds. */
+var PANEL_WIDTH=parseInt(dataAttr("data-width")||"",10);
+if(!(PANEL_WIDTH>0))PANEL_WIDTH=CONFIG.widgetWidth>0?CONFIG.widgetWidth:400;
+PANEL_WIDTH=Math.min(560,Math.max(280,PANEL_WIDTH));
+var PANEL_HEIGHT=parseInt(dataAttr("data-height")||"",10);
+if(!(PANEL_HEIGHT>0))PANEL_HEIGHT=CONFIG.widgetHeight>0?CONFIG.widgetHeight:640;
+PANEL_HEIGHT=Math.min(860,Math.max(400,PANEL_HEIGHT));
+var EDGE_OFFSET=parseInt(dataAttr("data-offset")||"",10);
+if(isNaN(EDGE_OFFSET)||EDGE_OFFSET<0)EDGE_OFFSET=CONFIG.launcherOffset>=0?CONFIG.launcherOffset:24;
+EDGE_OFFSET=Math.min(120,Math.max(0,EDGE_OFFSET));
+var PH=dataAttr("data-placeholder");
+if(PH)CONFIG.inputPlaceholder=PH;
+/* 54px launcher + ~10px air gap — matches Intercom-style widgets. */
+var PANEL_BOTTOM=EDGE_OFFSET+64;
 
 /* ── Wait for DOM ─────────────────────────────────────────────────────── */
 function ready(fn){
@@ -236,6 +254,7 @@ ready(function(){
       el._feedbackMsg=null;
       el._email="";
       el._emailOpen=false;
+      el._launcherHTML=null;
       /* Suggested questions only show before the visitor's first message. */
       el._hasConversation=false;
       return el;
@@ -292,7 +311,7 @@ ready(function(){
       shadow.innerHTML='<style>'+getStyles(CONFIG.primaryColor,CONFIG.chatBackground,LAUNCHER_RADIUS,PANEL_RADIUS,PANEL_SHADOW,FONT_FAMILY,side,PANEL_WIDTH,PANEL_HEIGHT,EDGE_OFFSET,PANEL_BOTTOM)+'</style>'+
         '<div class="datalk-root">'+
           /* Launcher button */
-          '<button type="button" class="datalk-launcher" aria-label="'+esc(CONFIG.launcherLabel)+'">'+
+          '<button type="button" class="datalk-launcher" aria-label="'+esc(CONFIG.launcherLabel)+'" aria-expanded="false">'+
             '<span class="datalk-launcher-icon">'+esc(CONFIG.avatarInitials)+'</span>'+
             '<span class="datalk-launcher-text">'+esc(CONFIG.launcherLabel)+'</span>'+
           '</button>'+
@@ -470,7 +489,14 @@ ready(function(){
       this._isOpen=true;
       var root=this.shadowRoot;
       root.querySelector(".datalk-panel").classList.add("datalk-panel-open");
-      root.querySelector(".datalk-launcher").style.display="none";
+      /* The launcher stays put and becomes the close button — the standard
+         Intercom/Drift pattern, so no empty margin appears under the panel. */
+      var launcher=root.querySelector(".datalk-launcher");
+      if(this._launcherHTML==null)this._launcherHTML=launcher.innerHTML;
+      launcher.classList.add("datalk-launcher-close");
+      launcher.setAttribute("aria-label","Close chat");
+      launcher.setAttribute("aria-expanded","true");
+      launcher.innerHTML='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="datalk-close-x"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg>';
       var input=root.querySelector(".datalk-input");
       if(input)input.focus();
     };
@@ -478,7 +504,11 @@ ready(function(){
       this._isOpen=false;
       var root=this.shadowRoot;
       root.querySelector(".datalk-panel").classList.remove("datalk-panel-open");
-      root.querySelector(".datalk-launcher").style.display="";
+      var launcher=root.querySelector(".datalk-launcher");
+      launcher.classList.remove("datalk-launcher-close");
+      launcher.setAttribute("aria-label",CONFIG.launcherLabel);
+      launcher.setAttribute("aria-expanded","false");
+      if(this._launcherHTML!=null)launcher.innerHTML=this._launcherHTML;
     };
 
     /* ── Hide conversation starters after the first user message ──────── */
@@ -693,6 +723,8 @@ function getStyles(primary,bg,lRadius,pRadius,pShadow,font,side,panelW,panelH,ed
   '.datalk-launcher:focus{outline:3px solid rgba(59,130,246,.4);outline-offset:3px;}',
   '.datalk-launcher-icon{width:30px;height:30px;border-radius:999px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}',
   '.datalk-launcher-text{white-space:nowrap;}',
+  '.datalk-launcher.datalk-launcher-close{width:54px;height:54px;padding:0;justify-content:center;}',
+  '.datalk-launcher.datalk-launcher-close .datalk-close-x{width:20px;height:20px;}',
   /* Panel */
   '.datalk-panel{position:fixed;bottom:'+panelBottom+'px;'+side+':'+edgeOff+'px;z-index:2147483647;width:min('+panelW+'px,calc(100vw - 32px));height:min('+panelH+'px,calc(100vh - 120px));border:1px solid rgba(15,23,42,.08);border-radius:'+pRadius+';overflow:hidden;box-shadow:'+pShadow+';background:#fff;display:flex;flex-direction:column;opacity:0;transform:translateY(16px) scale(.96);pointer-events:none;transition:opacity .25s ease,transform .25s ease;}',
   '.datalk-panel.datalk-panel-open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}',

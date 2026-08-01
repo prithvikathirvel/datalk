@@ -3,6 +3,7 @@
 import type { SearchResponse } from "@template/contracts";
 import { Badge, Button, Input, Label, Textarea } from "@template/ui";
 import { type FormEvent, useRef, useState } from "react";
+import { readApiError } from "@/lib/api-error";
 
 // --- Types --------------------------------------------------------------------
 
@@ -41,13 +42,7 @@ interface EvalAggregate {
 // --- Helpers ------------------------------------------------------------------
 
 async function readError(response: Response) {
-  const data = (await response.json().catch(() => null)) as {
-    detail?: string;
-    message?: string;
-  } | null;
-  return (
-    data?.detail ?? data?.message ?? `Request failed (HTTP ${response.status}).`
-  );
+  return readApiError(response);
 }
 
 /**

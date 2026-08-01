@@ -223,7 +223,7 @@ export interface EmbedConfigFormInput {
 }
 
 /** Parses a numeric form field; returns undefined for anything unusable. */
-function optionalNumber(value: unknown, min: number, max: number) {
+export function optionalNumber(value: unknown, min: number, max: number) {
   const num = Number(value);
   if (!Number.isFinite(num)) return undefined;
   return Math.min(max, Math.max(min, Math.round(num)));
@@ -268,12 +268,12 @@ export function toBackendConfigPayload(
     collect_visitor_email: input.collectVisitorEmail ?? false,
     is_active: input.isActive ?? true,
     model: input.model?.trim() || null,
-    // Optional widget dimensions — harmless extras for backends that do not
-    // persist them yet (Pydantic ignores unknown fields by default), and the
-    // widget falls back to sane defaults when they come back empty.
-    widget_width: optionalNumber(input.widgetWidth, 280, 560) ?? null,
-    widget_height: optionalNumber(input.widgetHeight, 400, 860) ?? null,
-    input_placeholder: input.inputPlaceholder?.trim().slice(0, 80) || null,
-    launcher_offset: optionalNumber(input.launcherOffset, 0, 120) ?? null,
+    // NOTE: widgetWidth / widgetHeight / inputPlaceholder / launcherOffset
+    // are deliberately NOT sent to the backend. A strict create/update model
+    // answers unknown fields with HTTP 422 — which then silently discards
+    // *every* field in the save (name, colors, ...). These UI-only values
+    // travel inside the install snippet as data-* attributes instead (see
+    // ui/lib/embed-appearance.ts and api/embed/script/route.ts), while the
+    // read side below keeps mapping them if backend support ever lands.
   };
 }

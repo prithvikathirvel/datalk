@@ -74,6 +74,24 @@ export async function proxyJson<T>(
     const response = await fetch(url, init);
     console.log(`[backend] response ← ${response.status} ${url}`);
     const contentType = response.headers.get("content-type") ?? "";
+    if (!response.ok) {
+      // Errors are always normalised to a flat `{ detail: string }` so client
+      // components can render them directly — FastAPI's 422 detail arrays
+      // (objects with loc/msg/type/input) must never reach the React tree.
+      const content = (await response.json().catch(() => null)) as {
+        detail?: unknown;
+        message?: string;
+      } | null;
+      return NextResponse.json(
+        {
+          detail:
+            normalizeDetail(content?.detail) ??
+            content?.message ??
+            `Backend returned ${response.status}`,
+        },
+        { status: response.status },
+      );
+    }
     const data = contentType.includes("application/json")
       ? ((await response.json()) as T)
       : ((await response.text()) as T);
@@ -108,10 +126,7 @@ export function embedUrl(path: string) {
 
 /** Public widget endpoints (API-key auth): `<EMBED_BASE_URL>/widget/{path}`. */
 export function widgetUrl(path: string) {
-  return joinUrl(
-    backendUrls.embed,
-    `/widget/${path.replace(/^\//, "")}`,
-  );
+  return joinUrl(backendUrls.embed, `/widget/${path.replace(/^\//, "")}`);
 }
 
 console.log("[backend] ingestion base URL:", backendUrls.ingestion);

@@ -261,8 +261,8 @@ export function SettingsContent({
                   ),
                 },
                 {
-                  href: "/embed",
-                  label: "Embed widgets",
+                  href: "/studio",
+                  label: "Chatbot Studio",
                   icon: (
                     <path
                       fillRule="evenodd"

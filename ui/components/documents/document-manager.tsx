@@ -19,6 +19,7 @@ import {
 import { RagEvaluation } from "@/components/documents/rag-evaluation";
 import { TextInput } from "@/components/ui/text-input";
 import { VercelTabs } from "@/components/ui/vercel-tabs";
+import { readApiError } from "@/lib/api-error";
 import { formatBytes, formatDateTime } from "@/lib/format";
 
 // --- Types --------------------------------------------------------------------
@@ -90,11 +91,7 @@ const DOC_TABS: Array<{ id: DocTab; label: string; icon: React.ReactNode }> = [
 // --- Helpers ------------------------------------------------------------------
 
 async function readError(response: Response) {
-  const data = (await response.json().catch(() => null)) as {
-    detail?: string;
-    message?: string;
-  } | null;
-  return data?.detail ?? data?.message ?? "Request failed.";
+  return readApiError(response);
 }
 
 function getFileExtension(filename: string): string {

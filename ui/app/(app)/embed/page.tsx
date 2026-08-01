@@ -1,5 +1,6 @@
-import { EmbedBuilder } from "@/components/embed/embed-builder";
+import { redirect } from "next/navigation";
 
-export default function EmbedPage() {
-  return <EmbedBuilder />;
+/** Legacy path — the studio lives at /studio now. */
+export default function EmbedRedirect() {
+  redirect("/studio");
 }
