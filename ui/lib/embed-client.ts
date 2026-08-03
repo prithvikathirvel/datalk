@@ -3,6 +3,7 @@ import type {
   EmbedConfigSource,
   RotateApiKeyResponse,
 } from "@template/contracts";
+import { readApiError } from "./api-error";
 
 /** Client helpers for the embed API-key and source-scoping endpoints. */
 
@@ -17,13 +18,7 @@ export class EmbedApiError extends Error {
 }
 
 async function readDetail(response: Response) {
-  const data = (await response.json().catch(() => null)) as {
-    detail?: string;
-    message?: string;
-  } | null;
-  return (
-    data?.detail ?? data?.message ?? `Request failed (${response.status}).`
-  );
+  return readApiError(response);
 }
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {

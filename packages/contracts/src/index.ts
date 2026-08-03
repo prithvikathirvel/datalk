@@ -244,6 +244,14 @@ export interface EmbedConfig {
   botDescription?: string;
   contextPrompt?: string;
   showPoweredBy?: boolean;
+  /** Chat panel width in px (default 400). */
+  widgetWidth?: number;
+  /** Chat panel height in px (default 640). */
+  widgetHeight?: number;
+  /** Placeholder text for the chat input (default "Ask a question..."). */
+  inputPlaceholder?: string;
+  /** Distance in px between the launcher/panel and the screen corner (default 24). */
+  launcherOffset?: number;
   /**
    * Documents this chatbot is allowed to search. Empty means unrestricted —
    * the bot searches the user's whole library.

@@ -32,7 +32,9 @@ export async function GET() {
     }
 
     const data = (await backendResponse.json()) as BackendEmbedConfig[];
-    return NextResponse.json({ configs: data });
+    // Map through toEmbedConfig so the UI always receives the full contract
+    // shape (defaults filled, optional widget dimensions normalised).
+    return NextResponse.json({ configs: data.map(toEmbedConfig) });
   } catch (error) {
     return NextResponse.json(
       {

@@ -34,6 +34,7 @@ export default function robots(): MetadataRoute.Robots {
         "/quality",
         "/settings",
         "/embed",
+        "/studio",
       ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,

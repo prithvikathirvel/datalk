@@ -46,8 +46,8 @@ const navigation: { href: string; label: string; icon: ReactNode }[] = [
     ),
   },
   {
-    href: "/embed",
-    label: "Embed",
+    href: "/studio",
+    label: "Chatbot Studio",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
         <polyline points="16 18 22 12 16 6" />
