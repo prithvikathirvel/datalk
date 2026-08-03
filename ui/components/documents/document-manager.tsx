@@ -1693,10 +1693,11 @@ function RetrievalPanel() {
           role="tablist"
           aria-label="Retrieval mode"
         >
+          {/* { id: "evaluation", label: "RAG Evaluation" }, */}
           {(
             [
               { id: "quick", label: "Quick Search" },
-              { id: "evaluation", label: "RAG Evaluation" },
+              
             ] as const
           ).map((item) => (
             <button
@@ -1853,46 +1854,100 @@ function SearchCard() {
       ) : null}
 
       {response && (
-        <div className="mt-5 space-y-3">
-          {response.results.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
-              <p className="font-medium text-slate-700">No matching chunks</p>
-              <p className="mt-1 text-sm text-slate-400">
-                Try uploading this content as processed or both.
-              </p>
-            </div>
-          ) : (
-            response.results.map((result) => (
-              <div
-                key={result.id}
-                className="rounded-xl border border-slate-200 p-4"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge>Score {result.score.toFixed(2)}</Badge>
-                  {result.metadata.title && (
-                    <Badge variant="outline">
-                      {String(result.metadata.title)}
-                    </Badge>
-                  )}
-                  {result.metadata.page_number && (
-                    <Badge variant="outline">
-                      Page {String(result.metadata.page_number)}
-                    </Badge>
-                  )}
-                </div>
-                <div className="mt-3 grid gap-2 text-slate-500 text-sm sm:grid-cols-2">
-                  <p className="truncate">
-                    Document: {String(result.metadata.document_id ?? "Unknown")}
-                  </p>
-                  <p>
-                    Chunk: {String(result.metadata.chunk_index ?? result.id)}
-                  </p>
-                </div>
+        <div className="mt-5">
+          <p className="mb-3 text-[11px] text-slate-400">
+            {response.results.length} result
+            {response.results.length !== 1 ? "s" : ""} for &ldquo;
+            {response.query}&rdquo;
+          </p>
+          <div className="space-y-2.5">
+            {response.results.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
+                <p className="font-medium text-slate-700">No matching chunks</p>
+                <p className="mt-1 text-sm text-slate-400">
+                  Try uploading this content as processed or both.
+                </p>
               </div>
-            ))
-          )}
+            ) : (
+              response.results.map((result, index) => {
+                const text =
+                  typeof result.metadata.text === "string"
+                    ? result.metadata.text
+                    : null;
+                const docId =
+                  typeof result.metadata.document_id === "string"
+                    ? result.metadata.document_id
+                    : null;
+                const shortDocId = docId ? `${docId.slice(0, 8)}…` : null;
+                return (
+                  <div
+                    key={result.id}
+                    className="group cursor-default rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500">
+                          {index + 1}
+                        </span>
+                        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                          {result.metadata.page_number != null && (
+                            <Badge variant="outline" className="text-[11px]">
+                              Pg {String(result.metadata.page_number)}
+                            </Badge>
+                          )}
+                          {result.metadata.title ? (
+                            <span className="truncate text-sm font-medium text-slate-700">
+                              {String(result.metadata.title)}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <SearchScoreBadge score={result.score} />
+                    </div>
+
+                    {text && (
+                      <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-slate-600 group-hover:line-clamp-5">
+                        {text}
+                      </p>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
+                      <span>Chunk {result.metadata.chunk_index ?? 0}</span>
+                      {result.metadata.chunk_size != null && (
+                        <span>{String(result.metadata.chunk_size)} chars</span>
+                      )}
+                      {shortDocId && (
+                        <span
+                          className="font-mono"
+                          title={docId ?? undefined}
+                        >
+                          {shortDocId}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
     </div>
+  );
+}
+
+function SearchScoreBadge({ score }: { score: number }) {
+  const cls =
+    score >= 0.65
+      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+      : score >= 0.5
+        ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+        : "bg-slate-100 text-slate-500";
+  return (
+    <span
+      className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${cls}`}
+    >
+      {score.toFixed(3)}
+    </span>
   );
 }

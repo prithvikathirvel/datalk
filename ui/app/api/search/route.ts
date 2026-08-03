@@ -6,6 +6,7 @@ import {
   joinUrl,
   proxyJson,
 } from "@/lib/backend";
+import { getSessionUser } from "@/lib/session";
 
 export async function GET(request: Request) {
   const { token, response } = await getBearerTokenOrResponse();
@@ -16,7 +17,9 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = url.searchParams.get("query");
   const topK = url.searchParams.get("top_k") ?? "5";
-  const userId = url.searchParams.get("user_id");
+  // Fall back to session user's sub when not provided by the client
+  const sessionUser = await getSessionUser();
+  const userId = url.searchParams.get("user_id") ?? sessionUser?.id ?? null;
   const documentIds = url.searchParams.getAll("document_ids");
 
   if (!query) {
@@ -34,7 +37,7 @@ export async function GET(request: Request) {
   return proxyJson<SearchResponse>(
     joinUrl(
       backendUrls.ingestion,
-      `/search/search?${backendParams.toString()}`,
+      `rag/api/v1/search/search?${backendParams.toString()}`,
     ),
     {
       method: "GET",
