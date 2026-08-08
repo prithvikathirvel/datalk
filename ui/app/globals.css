@@ -109,6 +109,33 @@ select {
   100% { transform: scale(1.6); opacity: 0; }
 }
 
+/* Toast entrance — slides up from the bottom-right corner. */
+@keyframes dk-toast-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.dk-toast-in {
+  animation: dk-toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Spotlight tour spotlight pulse ring. */
+@keyframes dk-spotlight-pulse {
+  0% { box-shadow: 0 0 0 4px rgb(15 23 42 / 0.14), 0 0 0 9999px rgb(15 23 42 / 0.62); }
+  60% { box-shadow: 0 0 0 8px rgb(15 23 42 / 0.08), 0 0 0 9999px rgb(15 23 42 / 0.62); }
+  100% { box-shadow: 0 0 0 4px rgb(15 23 42 / 0.14), 0 0 0 9999px rgb(15 23 42 / 0.62); }
+}
+
+.dk-spotlight {
+  animation: dk-spotlight-pulse 2s ease-in-out infinite;
+}
+
 .dk-reveal {
   opacity: 0;
   transform: translate3d(0, 24px, 0);

@@ -66,6 +66,28 @@ ui/.data/embed-configs.json
 
 The **Coverage Lab** page lets admins paste real customer questions and test whether processed documents retrieve strong chunks before the chatbot is published. It classifies each question as **Covered**, **Weak**, or **Missing**, turning weak answers into content improvement tasks.
 
+### First-time onboarding
+
+After the very first signup (Google OAuth or email/password), new users are taken to `/onboarding` and asked a few questions (country, how they heard about Datalk, role, team size, notes). It's skippable — "Skip for now" goes straight to the dashboard, and the answers can always be completed or edited later from **Settings → About you**. Submissions are stored per user and surfaced in the admin panel.
+
+### Admin panel (`/admin`)
+
+A separate, internal operations console at **`/admin`** (its own path, its own login, its own session cookie — customer logins can never reach it). Sign in with username/password:
+
+- Default credentials: **`admin` / `admin`**
+- Change them from the panel's **Settings** tab or via `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars.
+
+The dashboard shows everything available locally today: onboarding submissions, registered users (Google + email), chatbot configs, and the knowledge-gap feedback inbox. See `ONBOARDING_ADMIN_BACKEND_API.md` for the backend API contract to build for production.
+
+### Toasts
+
+All success/error notifications (uploads, deletes, saves, sign-in errors, API failures) appear as minimal toasts in the **bottom-right corner**, styled to match the theme. Field-level validation stays inline where it's more helpful.
+
+### Guide & interactive tour
+
+- **Guide** (`/tutorial`, also in the sidebar): a plain-English walkthrough of every feature with a "first 10 minutes" checklist.
+- **Take the tour** (dashboard header, or Guide → "Take the interactive tour"): an in-app spotlight tour that highlights each section and explains what it does.
+
 ## Project structure
 
 ```txt
@@ -160,6 +182,14 @@ npm run lint
 npm run typecheck
 npm run format
 ```
+
+## Backend API contract for onboarding & admin
+
+The onboarding form and the `/admin` panel run on local JSON stores today
+(`ui/.data/*.json`) so the product works without a backend. The full API
+contract for the services that should replace them — payload schemas, examples,
+validation rules, admin auth, and a suggested database model — is documented in
+[`ONBOARDING_ADMIN_BACKEND_API.md`](./ONBOARDING_ADMIN_BACKEND_API.md).
 
 ## Backend routes used
 

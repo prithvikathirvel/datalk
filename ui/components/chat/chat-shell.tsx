@@ -8,6 +8,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ConversationSwitcher } from "@/components/chat/conversation-switcher";
 import { fetchConversation, readApiError, toChatMessages } from "@/lib/chat";
 import { type LocalChatMessage, useChatStore } from "@/stores/chat-store";
+import { toast } from "@/stores/toast-store";
 
 function createMessage(
   role: LocalChatMessage["role"],
@@ -53,8 +54,6 @@ export function ChatShell({
   const [loadingHistory, setLoadingHistory] = useState(
     Boolean(initialThreadId),
   );
-  const [error, setError] = useState<string | null>(null);
-
   // Sync the store with the thread in the URL: load history for an existing
   // thread, or clear the board for a brand new conversation.
   useEffect(() => {
@@ -62,7 +61,6 @@ export function ChatShell({
 
     async function loadConversation(nextThreadId: string) {
       setLoadingHistory(true);
-      setError(null);
       try {
         const data = await fetchConversation(nextThreadId);
         if (cancelled) return;
@@ -73,10 +71,11 @@ export function ChatShell({
         if (cancelled) return;
         setMessages([]);
         setUsage(null);
-        setError(
+        toast.error(
           caught instanceof Error
             ? caught.message
             : "Unable to load this conversation.",
+          "Couldn't load conversation",
         );
       } finally {
         if (!cancelled) setLoadingHistory(false);
@@ -87,7 +86,6 @@ export function ChatShell({
       void loadConversation(initialThreadId);
     } else {
       reset();
-      setError(null);
       setLoadingHistory(false);
     }
 
@@ -105,7 +103,6 @@ export function ChatShell({
     if (!message || loading) return;
 
     if (inputRef.current) inputRef.current.value = "";
-    setError(null);
     setLoading(true);
     addMessage(createMessage("user", message));
 
@@ -118,7 +115,7 @@ export function ChatShell({
 
     setLoading(false);
     if (!response.ok) {
-      setError(await readApiError(response));
+      toast.error(await readApiError(response), "Couldn't send message");
       return;
     }
 
@@ -155,7 +152,6 @@ export function ChatShell({
 
   function startNewChat() {
     reset();
-    setError(null);
     if (inputRef.current) inputRef.current.value = "";
     router.push("/chat/new");
   }
@@ -393,11 +389,6 @@ export function ChatShell({
       {/* Input footer */}
       <div className="shrink-0 border-slate-100 border-t bg-white px-6 py-4">
         <div className="mx-auto max-w-2xl">
-          {error && (
-            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
           <form onSubmit={onSubmit} className="relative">
             <Textarea
               ref={inputRef}

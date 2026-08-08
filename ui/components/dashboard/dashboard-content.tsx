@@ -4,6 +4,7 @@ import type { DocumentFile, EmbedConfig } from "@template/contracts";
 import { Badge } from "@template/ui";
 import Link from "next/link";
 import { memo, useEffect, useState } from "react";
+import { TourProvider, useTour } from "@/components/tour/tour-provider";
 import { readApiError } from "@/lib/api-error";
 import type { AnalyticsData, DailyConversation } from "@/lib/data";
 import {
@@ -12,6 +13,8 @@ import {
   setupSteps,
 } from "@/lib/data";
 import { formatBytes, formatDateTime } from "@/lib/format";
+import { DASHBOARD_TOUR_STEPS } from "@/lib/tour";
+import { toast } from "@/stores/toast-store";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -108,7 +111,10 @@ function SetupGuide({
   const doneCount = Object.values(completed).filter(Boolean).length;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div
+      data-tour="getting-started"
+      className="rounded-xl border border-slate-200 bg-white p-5"
+    >
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="font-semibold text-slate-950">Getting started</h2>
@@ -298,16 +304,57 @@ function RecentDocuments({
   );
 }
 
+// ─── Tour button ───────────────────────────────────────────────────────────────
+
+function TourButton() {
+  const { start } = useTour();
+  return (
+    <button
+      type="button"
+      onClick={start}
+      className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-4 w-4"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4M12 8h.01" />
+      </svg>
+      Take the tour
+    </button>
+  );
+}
+
+// ─── Auto-start (from the Guide page: /dashboard?tour=1) ──────────────────────
+
+function AutoStartTour({ active }: { active: boolean }) {
+  const { start } = useTour();
+  useEffect(() => {
+    if (active) start();
+  }, [active, start]);
+  return null;
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function DashboardContent() {
+export function DashboardContent({
+  autoStartTour = false,
+}: {
+  autoStartTour?: boolean;
+}) {
   const [files, setFiles] = useState<DocumentFile[]>([]);
   const [embeds, setEmbeds] = useState<EmbedConfig[]>([]);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -319,7 +366,10 @@ export function DashboardContent() {
       setLoading(false);
 
       if (!filesRes.ok) {
-        setError(await readApiError(filesRes, "Unable to reach the backend."));
+        toast.error(
+          await readApiError(filesRes, "Unable to reach the backend."),
+          "Couldn't load your workspace",
+        );
       } else {
         setFiles((await filesRes.json()) as DocumentFile[]);
       }
@@ -342,115 +392,119 @@ export function DashboardContent() {
   const analytics = analyticsData ?? mockAnalyticsData;
 
   return (
-    <div className="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-white lg:h-screen">
-      {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
-        <div>
-          <h1 className="font-semibold text-slate-950">Overview</h1>
-          <p className="text-slate-400 text-xs">Welcome back to Datalk</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/chat"
-            className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-3 py-1.5 text-sm text-white transition-colors hover:bg-slate-800"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
+    <TourProvider steps={DASHBOARD_TOUR_STEPS}>
+      <AutoStartTour active={autoStartTour} />
+      <div className="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-white lg:h-screen">
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div>
+            <h1 className="font-semibold text-slate-950">Overview</h1>
+            <p className="text-slate-400 text-xs">Welcome back to Datalk</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <TourButton />
+            <Link
+              href="/chat"
+              className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-3 py-1.5 text-sm text-white transition-colors hover:bg-slate-800"
             >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            Start chatting
-          </Link>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="space-y-5 p-6">
-          {error && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Stats row */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Documents"
-              value={String(files.length)}
-              sub={loading ? undefined : formatBytes(totalSize)}
-              loading={loading}
-            />
-            <StatCard
-              label="Conversations"
-              value={analytics.totalConversations.toLocaleString()}
-              sub="All time"
-            />
-            <StatCard
-              label="Active embeds"
-              value={loading ? "..." : String(liveEmbeds)}
-              sub={loading ? undefined : `${embeds.length} total`}
-              loading={loading}
-            />
-            <StatCard
-              label="Satisfaction"
-              value={`${Math.round(
-                (analytics.satisfaction.thumbsUp /
-                  Math.max(
-                    analytics.satisfaction.thumbsUp +
-                      analytics.satisfaction.thumbsDown,
-                    1,
-                  )) *
-                  100,
-              )}%`}
-              sub="Positive feedback"
-              accent
-            />
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              Start chatting
+            </Link>
           </div>
+        </div>
 
-          {/* Activity + quick actions */}
-          <div className="grid gap-5 lg:grid-cols-[1fr_auto]">
-            <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="font-semibold text-slate-950">
-                    Conversation activity
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Daily conversations · last 8 days
-                  </p>
+        {/* Content */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="space-y-5 p-6">
+            {/* Stats row */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                label="Documents"
+                value={String(files.length)}
+                sub={loading ? undefined : formatBytes(totalSize)}
+                loading={loading}
+              />
+              <StatCard
+                label="Conversations"
+                value={analytics.totalConversations.toLocaleString()}
+                sub="All time"
+              />
+              <StatCard
+                label="Active embeds"
+                value={loading ? "..." : String(liveEmbeds)}
+                sub={loading ? undefined : `${embeds.length} total`}
+                loading={loading}
+              />
+              <StatCard
+                label="Satisfaction"
+                value={`${Math.round(
+                  (analytics.satisfaction.thumbsUp /
+                    Math.max(
+                      analytics.satisfaction.thumbsUp +
+                        analytics.satisfaction.thumbsDown,
+                      1,
+                    )) *
+                    100,
+                )}%`}
+                sub="Positive feedback"
+                accent
+              />
+            </div>
+
+            {/* Activity + quick actions */}
+            <div className="grid gap-5 lg:grid-cols-[1fr_auto]">
+              <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="font-semibold text-slate-950">
+                      Conversation activity
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Daily conversations · last 8 days
+                    </p>
+                  </div>
+                  <Link
+                    href="/analytics"
+                    className="text-xs text-slate-500 hover:text-slate-950 underline"
+                  >
+                    Full analytics
+                  </Link>
                 </div>
-                <Link
-                  href="/analytics"
-                  className="text-xs text-slate-500 hover:text-slate-950 underline"
-                >
-                  Full analytics
-                </Link>
+                <ActivityBars data={analytics.dailyConversations} />
               </div>
-              <ActivityBars data={analytics.dailyConversations} />
+
+              <div
+                data-tour="quick-actions"
+                className="rounded-xl border border-slate-200 bg-white p-5 lg:w-72"
+              >
+                <h2 className="mb-3 font-semibold text-slate-950">
+                  Quick actions
+                </h2>
+                <QuickActions />
+              </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-5 lg:w-72">
-              <h2 className="mb-3 font-semibold text-slate-950">
-                Quick actions
-              </h2>
-              <QuickActions />
+            {/* Recent docs + setup guide */}
+            <div className="grid gap-5 lg:grid-cols-2">
+              <RecentDocuments files={files} loading={loading} />
+              <SetupGuide
+                filesCount={files.length}
+                embedsCount={embeds.length}
+              />
             </div>
-          </div>
-
-          {/* Recent docs + setup guide */}
-          <div className="grid gap-5 lg:grid-cols-2">
-            <RecentDocuments files={files} loading={loading} />
-            <SetupGuide filesCount={files.length} embedsCount={embeds.length} />
           </div>
         </div>
       </div>
-    </div>
+    </TourProvider>
   );
 }

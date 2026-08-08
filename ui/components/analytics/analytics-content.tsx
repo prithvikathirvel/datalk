@@ -2,14 +2,17 @@
 
 import { cn } from "@template/ui";
 import { memo, useEffect, useMemo, useState } from "react";
-import { formatDateTime } from "@/lib/format";
 import type { AnalyticsData } from "@/lib/data";
+import { formatDateTime } from "@/lib/format";
+import { toast } from "@/stores/toast-store";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const Skeleton = memo(function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded-xl bg-slate-100 ${className ?? ""}`} />
+    <div
+      className={`animate-pulse rounded-xl bg-slate-100 ${className ?? ""}`}
+    />
   );
 });
 
@@ -108,21 +111,37 @@ const SatisfactionWidget = memo(function SatisfactionWidget({
   const items = [
     { label: "Positive", value: thumbsUp, pct: upPct, color: "bg-emerald-500" },
     { label: "Negative", value: thumbsDown, pct: downPct, color: "bg-red-400" },
-    { label: "No feedback", value: noFeedback, pct: 100 - upPct - downPct, color: "bg-slate-200" },
+    {
+      label: "No feedback",
+      value: noFeedback,
+      pct: 100 - upPct - downPct,
+      color: "bg-slate-200",
+    },
   ];
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-1 rounded-full overflow-hidden h-3">
-        <div className="h-full bg-emerald-500 transition-all" style={{ width: `${upPct}%` }} />
-        <div className="h-full bg-red-400 transition-all" style={{ width: `${downPct}%` }} />
+        <div
+          className="h-full bg-emerald-500 transition-all"
+          style={{ width: `${upPct}%` }}
+        />
+        <div
+          className="h-full bg-red-400 transition-all"
+          style={{ width: `${downPct}%` }}
+        />
         <div className="h-full bg-slate-200 flex-1" />
       </div>
       <div className="space-y-2">
         {items.map((item) => (
-          <div key={item.label} className="flex items-center justify-between text-sm">
+          <div
+            key={item.label}
+            className="flex items-center justify-between text-sm"
+          >
             <div className="flex items-center gap-2">
-              <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", item.color)} />
+              <span
+                className={cn("h-2.5 w-2.5 rounded-full shrink-0", item.color)}
+              />
               <span className="text-slate-600">{item.label}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -150,10 +169,17 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border border-slate-200 bg-white p-5", className)}>
+    <div
+      className={cn(
+        "rounded-xl border border-slate-200 bg-white p-5",
+        className,
+      )}
+    >
       <div className="mb-4">
         <h2 className="font-semibold text-slate-950">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
+        {subtitle && (
+          <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>
+        )}
       </div>
       {children}
     </div>
@@ -177,7 +203,10 @@ export function AnalyticsContent() {
         const json = (await res.json()) as AnalyticsData;
         setData(json);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load analytics.");
+        const message =
+          err instanceof Error ? err.message : "Failed to load analytics.";
+        setError(message);
+        toast.error(message, "Analytics unavailable");
       } finally {
         setLoading(false);
       }
@@ -283,7 +312,6 @@ export function AnalyticsContent() {
       {/* Scrollable content */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-5 p-6">
-
           {/* Metric row */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
@@ -351,7 +379,9 @@ export function AnalyticsContent() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="truncate text-sm text-slate-700">{q.question}</p>
+                          <p className="truncate text-sm text-slate-700">
+                            {q.question}
+                          </p>
                           <span className="shrink-0 text-xs font-semibold text-slate-950">
                             {q.count}×
                           </span>
@@ -376,14 +406,18 @@ export function AnalyticsContent() {
             >
               {data.unansweredQuestions.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 py-10 text-center">
-                  <p className="text-sm text-slate-400">All questions answered!</p>
+                  <p className="text-sm text-slate-400">
+                    All questions answered!
+                  </p>
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100">
                   {data.unansweredQuestions.map((q) => (
                     <div key={q.id} className="py-3 first:pt-0 last:pb-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm text-slate-800 leading-snug">{q.question}</p>
+                        <p className="text-sm text-slate-800 leading-snug">
+                          {q.question}
+                        </p>
                         <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 font-medium whitespace-nowrap">
                           {q.botName}
                         </span>
@@ -397,10 +431,8 @@ export function AnalyticsContent() {
               )}
             </SectionCard>
           </div>
-
         </div>
       </div>
     </div>
   );
 }
-

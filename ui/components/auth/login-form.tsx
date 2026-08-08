@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "@/stores/toast-store";
 
 const errorMessages: Record<string, string> = {
   no_code: "Google did not send us an authorization code. Please try again.",
@@ -29,6 +30,14 @@ export function LoginForm({
       "Something went wrong during sign-in. Please try again.")
     : null;
 
+  // Sign-in errors arrive via ?error= after the OAuth redirect — surface them
+  // as a toast instead of an inline banner.
+  useEffect(() => {
+    if (errorMessage) {
+      toast.error(errorMessage, "Sign-in failed");
+    }
+  }, [errorMessage]);
+
   function handleGoogleSignIn() {
     setLoading(true);
     const target =
@@ -40,36 +49,6 @@ export function LoginForm({
 
   return (
     <div className="flex flex-col gap-5">
-      {errorMessage ? (
-        <div
-          role="alert"
-          className="dk-animate-fade-up flex gap-2.5 rounded-lg border border-red-200 border-l-2 border-l-red-500 bg-red-50/70 px-4 py-3 text-[13px] text-red-700"
-        >
-          <svg
-            className="mt-0.5 h-4 w-4 shrink-0"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle
-              cx="8"
-              cy="8"
-              r="6.5"
-              stroke="currentColor"
-              strokeWidth="1.4"
-            />
-            <path
-              d="M8 5v3.5"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeWidth="1.4"
-            />
-            <circle cx="8" cy="11" r="0.75" fill="currentColor" />
-          </svg>
-          <span className="leading-5">{errorMessage}</span>
-        </div>
-      ) : null}
-
       <button
         type="button"
         onClick={handleGoogleSignIn}

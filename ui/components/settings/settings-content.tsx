@@ -1,8 +1,12 @@
 "use client";
 
 import { Button, Input, Label, Select, Textarea } from "@template/ui";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { countryName } from "@/lib/countries";
+import type { OnboardingSubmission } from "@/lib/onboarding-store";
+import { toast } from "@/stores/toast-store";
 
 const MODEL_OPTIONS = [
   { value: "gpt-4o", label: "GPT-4o (recommended)" },
@@ -95,7 +99,32 @@ export function SettingsContent({
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [onboarding, setOnboarding] = useState<OnboardingSubmission | null>(
+    null,
+  );
+  const [onboardingLoading, setOnboardingLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadOnboarding() {
+      try {
+        const res = await fetch("/api/onboarding", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          submission: OnboardingSubmission | null;
+        };
+        if (!cancelled) setOnboarding(data.submission);
+      } catch {
+        // Non-fatal — the section shows the "complete it" prompt instead.
+      } finally {
+        if (!cancelled) setOnboardingLoading(false);
+      }
+    }
+    void loadOnboarding();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -109,8 +138,7 @@ export function SettingsContent({
     // Simulate save — preferences would be persisted server-side
     await new Promise((resolve) => setTimeout(resolve, 400));
     setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    toast.success("Chat preferences saved.", "Saved");
   }
 
   return (
@@ -237,13 +265,72 @@ export function SettingsContent({
                 <Button type="submit" size="sm" disabled={saving}>
                   {saving ? "Saving…" : "Save preferences"}
                 </Button>
-                {saved && (
-                  <span className="text-emerald-600 text-sm font-medium">
-                    ✓ Saved
-                  </span>
-                )}
               </div>
             </form>
+          </Section>
+
+          {/* About you (onboarding) */}
+          <Section
+            title="About you"
+            description="The details you shared when you joined — used to improve Datalk for teams like yours."
+          >
+            <Row
+              label="Onboarding status"
+              hint="You can update these answers anytime."
+            >
+              {onboardingLoading ? (
+                <p className="text-sm text-slate-400">Loading…</p>
+              ) : onboarding ? (
+                <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3 text-sm">
+                  <p className="text-slate-700">
+                    <span className="font-medium">Country:</span>{" "}
+                    {countryName(onboarding.country)}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium">Heard about Datalk via:</span>{" "}
+                    {onboarding.heardFrom}
+                  </p>
+                  {onboarding.role && (
+                    <p className="text-slate-700">
+                      <span className="font-medium">Role:</span>{" "}
+                      {onboarding.role}
+                    </p>
+                  )}
+                  {onboarding.companySize && (
+                    <p className="text-slate-700">
+                      <span className="font-medium">Team size:</span>{" "}
+                      {onboarding.companySize}
+                    </p>
+                  )}
+                  {onboarding.notes && (
+                    <p className="text-slate-500">{onboarding.notes}</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  You skipped the onboarding questions when you signed up.
+                </p>
+              )}
+              <div className="mt-2">
+                <Link
+                  href="/onboarding"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  {onboarding ? "Update details" : "Complete onboarding"}
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    className="h-3 w-3"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 4l4 4-4 4" />
+                  </svg>
+                </Link>
+              </div>
+            </Row>
           </Section>
 
           {/* Quick links */}

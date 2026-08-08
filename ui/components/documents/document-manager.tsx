@@ -21,6 +21,7 @@ import { TextInput } from "@/components/ui/text-input";
 import { VercelTabs } from "@/components/ui/vercel-tabs";
 import { readApiError } from "@/lib/api-error";
 import { formatBytes, formatDateTime } from "@/lib/format";
+import { toast } from "@/stores/toast-store";
 
 // --- Types --------------------------------------------------------------------
 
@@ -121,17 +122,15 @@ const STEP_LABEL: Record<UploadStep, string> = {
 export function DocumentManager() {
   const [files, setFiles] = useState<DocumentFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const [activeTab, setActiveTab] = useState<DocTab>("upload");
 
   const loadFiles = useCallback(async () => {
     setLoading(true);
-    setFetchError(null);
     const response = await fetch("/api/ingest/files", { cache: "no-store" });
     setLoading(false);
     if (!response.ok) {
-      setFetchError(await readError(response));
+      toast.error(await readError(response), "Couldn't load your files");
       return;
     }
     setFiles((await response.json()) as DocumentFile[]);
@@ -200,7 +199,6 @@ export function DocumentManager() {
             <FilesTab
               files={files}
               loading={loading}
-              error={fetchError}
               onRefresh={() => setRefreshToken((v) => v + 1)}
             />
           </div>
@@ -249,10 +247,6 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
   const [waitFor, setWaitFor] = useState(0);
 
   const [step, setStep] = useState<UploadStep>("idle");
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   const uploading = step !== "idle";
 
@@ -278,21 +272,18 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
   function handleSourceChange(next: UploadSource) {
     setSource(next);
     setMode("url");
-    setMessage(null);
     setSelectedFile(null);
     setUrlInput("");
   }
 
   function handleModeChange(next: UploadMode) {
     setMode(next);
-    setMessage(null);
     setSelectedFile(null);
     setUrlInput("");
   }
 
   function handleFileSelect(file: File) {
     setSelectedFile(file);
-    setMessage(null);
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -308,15 +299,14 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setMessage(null);
 
     if (source === "file" && mode === "upload" && !selectedFile) {
-      setMessage({ type: "error", text: "Please select a file to upload." });
+      toast.error("Please select a file to upload.");
       return;
     }
     if ((source === "file" && mode === "url") || source === "website") {
       if (!urlInput.trim()) {
-        setMessage({ type: "error", text: "Please enter a valid URL." });
+        toast.error("Please enter a valid URL.");
         return;
       }
     }
@@ -352,7 +342,7 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
         });
 
         if (!presignedRes.ok) {
-          setMessage({ type: "error", text: await readError(presignedRes) });
+          toast.error(await readError(presignedRes), "Upload failed");
           setStep("idle");
           return;
         }
@@ -378,10 +368,9 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
         });
 
         if (!s3Res.ok) {
-          setMessage({
-            type: "error",
-            text: `Storage upload failed (HTTP ${s3Res.status}). Please try again.`,
-          });
+          toast.error(
+            `Storage upload failed (HTTP ${s3Res.status}). Please try again.`,
+          );
           setStep("idle");
           return;
         }
@@ -404,16 +393,16 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
         });
 
         if (!uploadRes.ok) {
-          setMessage({ type: "error", text: await readError(uploadRes) });
+          toast.error(await readError(uploadRes), "Upload failed");
           setStep("idle");
           return;
         }
 
         setStep("idle");
-        setMessage({
-          type: "success",
-          text: "Document uploaded and registered successfully.",
-        });
+        toast.success(
+          "Document uploaded and registered successfully.",
+          "Upload complete",
+        );
         resetForm();
         onUploaded();
       } else if (source === "website") {
@@ -451,16 +440,13 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
         });
 
         if (!uploadRes.ok) {
-          setMessage({ type: "error", text: await readError(uploadRes) });
+          toast.error(await readError(uploadRes), "Crawl request failed");
           setStep("idle");
           return;
         }
 
         setStep("idle");
-        setMessage({
-          type: "success",
-          text: "Website submitted for crawling.",
-        });
+        toast.success("Website submitted for crawling.", "Crawl started");
         resetForm();
         onUploaded();
       } else {
@@ -481,25 +467,21 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
         });
 
         if (!uploadRes.ok) {
-          setMessage({ type: "error", text: await readError(uploadRes) });
+          toast.error(await readError(uploadRes), "Upload failed");
           setStep("idle");
           return;
         }
 
         setStep("idle");
-        setMessage({
-          type: "success",
-          text: "Document submitted for processing.",
-        });
+        toast.success("Document submitted for processing.", "Upload complete");
         resetForm();
         onUploaded();
       }
     } catch (err) {
-      setMessage({
-        type: "error",
-        text:
-          err instanceof Error ? err.message : "An unexpected error occurred.",
-      });
+      toast.error(
+        err instanceof Error ? err.message : "An unexpected error occurred.",
+        "Upload failed",
+      );
       setStep("idle");
     }
   }
@@ -1114,41 +1096,6 @@ function UploadTab({ onUploaded }: { onUploaded: () => void }) {
                 </button>
               )}
             </div>
-
-            {/* ── Status message ── */}
-            {message && (
-              <div
-                className={`flex items-start gap-2.5 rounded-xl border p-4 text-sm ${
-                  message.type === "success"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-red-200 bg-red-50 text-red-700"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mt-0.5 h-4 w-4 shrink-0"
-                >
-                  {message.type === "success" ? (
-                    <>
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </>
-                  ) : (
-                    <>
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </>
-                  )}
-                </svg>
-                {message.text}
-              </div>
-            )}
           </div>
         </div>
       </form>
@@ -1348,25 +1295,19 @@ function RecentUploadsPreview({
 function FilesTab({
   files,
   loading,
-  error,
   onRefresh,
 }: {
   files: DocumentFile[];
   loading: boolean;
-  error: string | null;
   onRefresh: () => void;
 }) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmFile, setConfirmFile] = useState<DocumentFile | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   async function confirmDelete() {
     if (!confirmFile) return;
     setDeletingId(confirmFile.id);
     setConfirmFile(null);
-    setDeleteError(null);
-    setSuccessMessage(null);
     const fileType =
       confirmFile.type ??
       `application/${confirmFile.filename.split(".").pop() ?? "octet-stream"}`;
@@ -1376,10 +1317,10 @@ function FilesTab({
     );
     setDeletingId(null);
     if (!response.ok) {
-      setDeleteError(await readError(response));
+      toast.error(await readError(response), "Delete failed");
       return;
     }
-    setSuccessMessage(`"${confirmFile.filename}" was deleted successfully.`);
+    toast.success(`"${confirmFile.filename}" was deleted successfully.`);
     onRefresh();
   }
 
@@ -1477,42 +1418,6 @@ function FilesTab({
       </div>
 
       <div>
-        {successMessage && (
-          <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-green-200 bg-green-50 p-3 text-green-700 text-sm">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4 shrink-0"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-            {successMessage}
-          </div>
-        )}
-        {(error ?? deleteError) && (
-          <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4 shrink-0"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            {error ?? deleteError}
-          </div>
-        )}
-
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -1622,8 +1527,6 @@ function FilesTab({
                           type="button"
                           onClick={() => {
                             setConfirmFile(file);
-                            setDeleteError(null);
-                            setSuccessMessage(null);
                           }}
                           disabled={deletingId === file.id}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-40"
@@ -1694,12 +1597,7 @@ function RetrievalPanel() {
           aria-label="Retrieval mode"
         >
           {/* { id: "evaluation", label: "RAG Evaluation" }, */}
-          {(
-            [
-              { id: "quick", label: "Quick Search" },
-              
-            ] as const
-          ).map((item) => (
+          {([{ id: "quick", label: "Quick Search" }] as const).map((item) => (
             <button
               key={item.id}
               type="button"
@@ -1729,7 +1627,6 @@ function RetrievalPanel() {
 function SearchCard() {
   const [searching, setSearching] = useState(false);
   const [response, setResponse] = useState<SearchResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1739,7 +1636,6 @@ function SearchCard() {
     if (!query) return;
 
     setSearching(true);
-    setError(null);
     setResponse(null);
 
     try {
@@ -1748,12 +1644,12 @@ function SearchCard() {
         { cache: "no-store" },
       );
       if (!searchResponse.ok) {
-        setError(await readError(searchResponse));
+        toast.error(await readError(searchResponse), "Search failed");
         return;
       }
       setResponse((await searchResponse.json()) as SearchResponse);
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error
           ? `Search request failed: ${err.message}`
           : "Search request failed. Please try again.",
@@ -1818,29 +1714,6 @@ function SearchCard() {
           )}
         </Button>
       </form>
-
-      {error && (
-        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mt-0.5 h-4 w-4 shrink-0"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <div>
-            <p className="font-medium">Search could not be completed</p>
-            <p className="mt-0.5 text-red-600">{error}</p>
-          </div>
-        </div>
-      )}
 
       {searching && !response ? (
         <div className="mt-5 space-y-3" aria-hidden="true">
@@ -1917,10 +1790,7 @@ function SearchCard() {
                         <span>{String(result.metadata.chunk_size)} chars</span>
                       )}
                       {shortDocId && (
-                        <span
-                          className="font-mono"
-                          title={docId ?? undefined}
-                        >
+                        <span className="font-mono" title={docId ?? undefined}>
                           {shortDocId}
                         </span>
                       )}

@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { decodeJwtPayload } from "@/lib/session";
+import { upsertOAuthUser } from "@/lib/user-store";
 
 const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN ?? "";
 const clientId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "";
@@ -118,10 +120,46 @@ export async function GET(request: Request) {
   // Return the user to wherever they were originally heading, if it was safe
   const nextPath = cookieStore.get("cognito_oauth_next")?.value;
   cookieStore.delete("cognito_oauth_next");
-  const destination =
-    nextPath?.startsWith("/") && !nextPath.startsWith("//")
-      ? nextPath
-      : "/dashboard";
+  const safeNext =
+    nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : null;
+
+  // ── First-time signup detection ──────────────────────────────────────────
+  // Register the OAuth profile locally so we can tell a brand-new account
+  // (which still needs the onboarding questions) from a returning one.
+  // New or incomplete accounts are sent to /onboarding first — the form
+  // redirects to the dashboard (or back here) once submitted.
+  let needsOnboarding = false;
+  const idTokenPayload = decodeJwtPayload(tokens.id_token);
+  const oauthSub =
+    typeof idTokenPayload?.sub === "string" ? idTokenPayload.sub : "";
+  const oauthEmail =
+    typeof idTokenPayload?.email === "string" ? idTokenPayload.email : "";
+  const oauthName =
+    (typeof idTokenPayload?.name === "string" ? idTokenPayload.name : "") ||
+    (typeof idTokenPayload?.given_name === "string"
+      ? idTokenPayload.given_name
+      : "") ||
+    oauthEmail.split("@")[0] ||
+    "User";
+
+  if (oauthSub && oauthEmail) {
+    try {
+      const profile = await upsertOAuthUser({
+        id: oauthSub,
+        email: oauthEmail,
+        name: oauthName,
+      });
+      needsOnboarding = !profile.onboardingCompleted;
+    } catch (error) {
+      // Never block sign-in because the profile sync failed — fall through
+      // to the normal destination.
+      console.error("[cognito-callback] profile sync failed:", error);
+    }
+  }
+
+  const destination = needsOnboarding
+    ? "/onboarding"
+    : (safeNext ?? "/dashboard");
 
   return NextResponse.redirect(new URL(destination, request.url));
 }

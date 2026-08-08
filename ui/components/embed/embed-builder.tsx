@@ -34,6 +34,7 @@ import {
   saveAppearance,
 } from "@/lib/embed-appearance";
 import { formatDateTime } from "@/lib/format";
+import { toast } from "@/stores/toast-store";
 
 const defaults = {
   botName: "Docs Assistant",
@@ -201,8 +202,6 @@ export function EmbedBuilder() {
   const [origin, setOrigin] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<EditorTab>("brand");
   const [previewWidth, setPreviewWidth] = useState(440);
   /** Raw API key held only long enough to show the one-time modal. */
@@ -245,15 +244,14 @@ export function EmbedBuilder() {
     setRevealedKey(null);
     setIssuedKey(null);
     setActiveTab("brand");
-    setNotice(id ? null : "Creating a new chatbot — save when ready.");
-    setError(null);
+    if (!id) {
+      toast.info("Creating a new chatbot — save when ready.");
+    }
     setStudioMode(true);
   }
 
   function backToList() {
     setStudioMode(false);
-    setNotice(null);
-    setError(null);
   }
 
   useEffect(() => {
@@ -263,13 +261,12 @@ export function EmbedBuilder() {
   }, []);
 
   async function loadConfigs(nextSelectedId?: string | null) {
-    setError(null);
     const configsResponse = await fetch("/api/embed/configs", {
       cache: "no-store",
     });
 
     if (!configsResponse.ok) {
-      setError(await readError(configsResponse));
+      toast.error(await readError(configsResponse), "Couldn't load chatbots");
       return;
     }
 
@@ -296,7 +293,6 @@ export function EmbedBuilder() {
 
   async function loadAll(nextSelectedId?: string | null) {
     setLoading(true);
-    setError(null);
     await Promise.all([loadConfigs(nextSelectedId), loadFeedback()]);
     setLoading(false);
   }
@@ -306,8 +302,6 @@ export function EmbedBuilder() {
     const formData = new FormData(event.currentTarget);
     const isCreating = !selectedId;
     setSaving(true);
-    setError(null);
-    setNotice(null);
 
     const response = await fetch("/api/embed/configs", {
       method: "POST",
@@ -377,7 +371,7 @@ export function EmbedBuilder() {
 
     setSaving(false);
     if (!response.ok) {
-      setError(await readError(response));
+      toast.error(await readError(response), "Couldn't save chatbot");
       return;
     }
 
@@ -407,10 +401,11 @@ export function EmbedBuilder() {
       setKeyModalKind("created");
       setRevealedKey(data.apiKey);
       setIssuedKey(data.key ?? null);
-      setNotice("Chatbot created. Save your API key before closing.");
+      toast.success("Save your API key before closing — it's shown only once.");
     } else {
-      setNotice(
-        "Saved. Copy the updated install code below — it now carries your widget size.",
+      toast.success(
+        "Copy the updated install code below — it now carries your widget size.",
+        "Saved",
       );
     }
 
@@ -425,10 +420,10 @@ export function EmbedBuilder() {
       method: "DELETE",
     });
     if (!response.ok) {
-      setError(await readError(response));
+      toast.error(await readError(response), "Couldn't delete chatbot");
       return;
     }
-    setNotice("Chatbot deleted.");
+    toast.success("Chatbot deleted.");
     await loadConfigs(null);
     setStudioMode(false);
   }
@@ -506,16 +501,6 @@ export function EmbedBuilder() {
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
-          {error && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-          {notice && (
-            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700 text-sm">
-              {notice}
-            </div>
-          )}
           <DataTable
             columns={[
               {
@@ -694,13 +679,6 @@ export function EmbedBuilder() {
             <div className="min-w-0 flex-1 overflow-y-auto">
               <form key={selected?.id ?? "new"} onSubmit={saveConfig}>
                 <div className="space-y-5 p-6">
-                  {error ? (
-                    <StatusBanner tone="error">{error}</StatusBanner>
-                  ) : null}
-                  {notice ? (
-                    <StatusBanner tone="success">{notice}</StatusBanner>
-                  ) : null}
-
                   {/* Brand */}
                   <div
                     className={activeTab === "brand" ? "space-y-5" : "hidden"}
@@ -1019,8 +997,8 @@ export function EmbedBuilder() {
                     {activeTab === "sources" && (
                       <SourcesPanel
                         botId={selectedId}
-                        onError={setError}
-                        onSaved={setNotice}
+                        onError={(message) => toast.error(message)}
+                        onSaved={(message) => toast.success(message)}
                       />
                     )}
                   </div>
@@ -1094,12 +1072,12 @@ export function EmbedBuilder() {
                       <ApiKeysPanel
                         botId={selectedId}
                         issuedKey={issuedKey}
-                        onError={setError}
+                        onError={(message) => toast.error(message)}
                         onKeyRotated={(rawKey, key) => {
                           setKeyModalKind("rotated");
                           setRevealedKey(rawKey);
                           setIssuedKey(key);
-                          setNotice(
+                          toast.success(
                             "Key rotated. Update your install snippet.",
                           );
                         }}
@@ -1214,7 +1192,9 @@ export function EmbedBuilder() {
                     code={installCode}
                     disabled={!selected}
                     hasLiveKey={Boolean(revealedKey)}
-                    onCopied={() => setNotice("Install code copied.")}
+                    onCopied={() =>
+                      toast.success("Install code copied to clipboard.")
+                    }
                     onShowKeys={() => setActiveTab("keys")}
                   />
                 </div>
@@ -1224,26 +1204,6 @@ export function EmbedBuilder() {
         </div>
       </div>
     </>
-  );
-}
-
-function StatusBanner({
-  tone,
-  children,
-}: {
-  tone: "success" | "error";
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
-        tone === "success"
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-red-200 bg-red-50 text-red-700"
-      }`}
-    >
-      {children}
-    </div>
   );
 }
 

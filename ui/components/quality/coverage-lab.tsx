@@ -15,6 +15,7 @@ import {
 } from "@template/ui";
 import { type FormEvent, useState } from "react";
 import { readApiError } from "@/lib/api-error";
+import { toast } from "@/stores/toast-store";
 
 interface CoverageResult {
   question: string;
@@ -41,7 +42,6 @@ function statusFromScore(score: number) {
 export function CoverageLab() {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<CoverageResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,11 +59,11 @@ export function CoverageLab() {
       .filter(Boolean);
 
     if (!questions.length) {
+      toast.error("Paste at least one question to test.");
       return;
     }
 
     setRunning(true);
-    setError(null);
     setResults([]);
 
     const nextResults: CoverageResult[] = [];
@@ -82,7 +82,7 @@ export function CoverageLab() {
         cache: "no-store",
       });
       if (!response.ok) {
-        setError(await readError(response));
+        toast.error(await readError(response), "Coverage test failed");
         setRunning(false);
         return;
       }
@@ -196,12 +196,6 @@ How do I contact support?`}
                 <Metric label="Weak" value={String(weak)} tone="warning" />
                 <Metric label="Missing" value={String(missing)} tone="danger" />
               </div>
-
-              {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
-                  {error}
-                </div>
-              ) : null}
 
               <Card>
                 <CardHeader>

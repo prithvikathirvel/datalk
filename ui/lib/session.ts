@@ -4,11 +4,15 @@ import { createJwtToken, verifyJwtToken } from "./jwt";
 export const authCookieName = "rag_saas_token";
 
 /** Decode a JWT payload without verifying the signature. Safe for Cognito RS256 tokens. */
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
+export function decodeJwtPayload(
+  token: string,
+): Record<string, unknown> | null {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   try {
-    return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as Record<string, unknown>;
+    return JSON.parse(
+      Buffer.from(parts[1], "base64url").toString("utf8"),
+    ) as Record<string, unknown>;
   } catch {
     return null;
   }

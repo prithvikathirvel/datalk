@@ -7,6 +7,8 @@ interface JwtPayload {
   name: string;
   iat: number;
   exp: number;
+  /** Optional role claim — used by the admin panel session ("admin"). */
+  role?: string;
 }
 
 function base64UrlEncode(input: string | Buffer) {
@@ -27,6 +29,7 @@ export function createJwtToken(params: {
   sub: string;
   email: string;
   name: string;
+  role?: string;
   expiresInSeconds?: number;
 }) {
   const now = Math.floor(Date.now() / 1000);
@@ -36,6 +39,7 @@ export function createJwtToken(params: {
     name: params.name,
     iat: now,
     exp: now + (params.expiresInSeconds ?? 60 * 60 * 24 * 7),
+    ...(params.role ? { role: params.role } : {}),
   };
   const header = { alg: "HS256", typ: "JWT" };
   const unsigned = `${base64UrlEncode(JSON.stringify(header))}.${base64UrlEncode(JSON.stringify(payload))}`;

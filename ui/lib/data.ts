@@ -81,7 +81,8 @@ export const dashboardQuickActions: QuickAction[] = [
     label: "Upload docs",
     description: "Add files to your knowledge base",
     href: "/documents",
-    iconPath: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6",
+    iconPath:
+      "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6",
   },
   {
     label: "Analytics",
@@ -94,6 +95,13 @@ export const dashboardQuickActions: QuickAction[] = [
     description: "Deploy a chatbot widget",
     href: "/embed",
     iconPath: "M16 18l6-6-6-6M8 6L2 12l6 6",
+  },
+  {
+    label: "Guide",
+    description: "Learn what every feature does",
+    href: "/tutorial",
+    iconPath:
+      "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
   },
 ];
 
@@ -116,7 +124,8 @@ export const setupSteps: SetupStep[] = [
   {
     id: "test",
     label: "Test retrieval",
-    description: "Run a retrieval test to verify your docs are indexed correctly.",
+    description:
+      "Run a retrieval test to verify your docs are indexed correctly.",
     href: "/documents",
   },
   {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import { AmplifyProvider } from "@/components/auth/amplify-provider";
+import { ToastProvider } from "@/components/ui/toast-provider";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -157,6 +158,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AmplifyProvider>{children}</AmplifyProvider>
+        <ToastProvider />
       </body>
     </html>
   );
